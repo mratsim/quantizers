@@ -36,41 +36,9 @@ def process_and_tokenize(example):
 
 ds = ds.map(process_and_tokenize, remove_columns=ds.column_names)
 
-recipe = [
-    QuantizationModifier(
-        ignore=["lm_head"],
-        # DeepSeek V3 style block quantization + dynamic per token quantization
-        config_groups={
-            "group_0": QuantizationScheme(
-                targets=["Linear"],
-                weights=QuantizationArgs(
-                    num_bits=8,
-                    type=QuantizationType.FLOAT,
-                    dynamic=False,
-                    symmetric=True,
-                    strategy=QuantizationStrategy.BLOCK,
-                    block_structure=[128, 128],
-                ),
-                input_activations=QuantizationArgs(
-                    num_bits=8,
-                    type=QuantizationType.FLOAT,
-                    strategy=QuantizationStrategy.GROUP,
-                    symmetric=True,
-                    dynamic=True,
-                    observer=None,
-                    group_size=128,
-                ),
-            ),
-        },
-        # kv_cache_scheme=QuantizationArgs(
-        #     num_bits=8,
-        #     type=QuantizationType.FLOAT,
-        #     dynamic=False,
-        #     symmetric=True,
-        #     strategy=QuantizationStrategy.TENSOR,
-        # ),
-    )
-]
+recipe = QuantizationModifier(
+    targets="Linear", scheme="FP8_BLOCK", ignore=["lm_head"]
+)
 
 oneshot(
     # pipeline="basic",
