@@ -18,7 +18,7 @@ NUM_CALIBRATION_SAMPLES = 512
 MAX_SEQUENCE_LENGTH = 4096
 
 MODEL_ID = "ByteDance-Seed/Seed-OSS-36B-Instruct"
-MODEL_OUT = MODEL_ID.split("/")[1] + "-FP8-KV"
+MODEL_OUT = MODEL_ID.split("/")[1] + "-FP8-KV8"
 
 # Load model.
 model = AutoModelForCausalLM.from_pretrained(MODEL_ID, torch_dtype="auto")
