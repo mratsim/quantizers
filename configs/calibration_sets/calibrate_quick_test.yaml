@@ -1,8 +1,11 @@
 calibration_set:
-  - dataset: neuralmagic/calibration
-    config: LLM
-    split: train
-    num_samples: 64
-    column: messages
-    shuffle: true
-    seed: 42
+  max_seq_length: 8192
+  shuffle: true
+  seed: 42
+  datasets:
+    - dataset: neuralmagic/calibration
+      subset: LLM
+      split: train
+      columns: ["messages"]
+      formatter: chat_completion
+      num_samples: 64

@@ -4,14 +4,8 @@
 model:
   name: "Qwen/Qwen3-4B"
   revision: "main"
-  max_seq_length: 8192
 
 quantization:
   recipe: "recipe_awq_w4a16.yaml"
 
-inference:
-  max_seq_length: 8192
-  batch_size: 1
-
-# Calibration set reference (points to calibration set config file)
-calibration_set: "calibration_sets/calibrate_quick_test.yaml"
+calibration_set: "configs/calibration_sets/calibrate_quick_test.yaml"

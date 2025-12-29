@@ -20,3 +20,6 @@ collect_env.py
 cache/
 outputs/
 logs/
+
+# Cache files
+tests/cache/*.parquet
