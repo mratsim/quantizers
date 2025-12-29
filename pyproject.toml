@@ -5,23 +5,29 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "compressed-tensors>=0.12.2",
-    "llmcompressor >= 0.8.1",
+    # "compressed-tensors>=0.13.0",
+    # "llmcompressor >= 0.9.0",
+    # "compressed-tensors@git+https://github.com/vllm-project/compressed-tensors",
+    # "llmcompressor@git+https://github.com/vllm-project/llm-compressor",
+    "compressed-tensors",
+    "llmcompressor",
     "torch >= 2.8.0",
-    "transformers >= 4.56.2",
+    "transformers == 4.57.3",
     "zstandard>=0.23.0",
     "mistral-common >= 1.6.2",
     "huggingface_hub",
-    "accelerate",
+    "accelerate >= 1.10.1",
     "fla-core",
     "flash-linear-attention",
-    "causal-conv1d",
+    # "causal-conv1d",
 ]
 
 [tool.uv.sources]
 torch = [{ index = "pytorch-cu129"}]
 torchaudio = [{ index = "pytorch-cu129"}]
 torchvision = [{ index = "pytorch-cu129"}]
+compressed-tensors = { path = "../compressed-tensors" }
+llmcompressor = { path = "../llm-compressor" }
 
 # uv pip install -U --prerelease allow torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu129
 [[tool.uv.index]]

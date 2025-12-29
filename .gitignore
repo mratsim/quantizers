@@ -9,6 +9,14 @@ wheels/
 # Virtual environments
 .venv
 
+# lockfile
+uv.lock
+
 # llmcompressor
 sparse_logs/
 collect_env.py
+
+# Artifacts
+cache/
+outputs/
+logs/
