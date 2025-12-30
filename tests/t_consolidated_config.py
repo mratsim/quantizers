@@ -183,10 +183,3 @@ def test_streaming_configurations():
 
 if __name__ == "__main__":
     print("=== Testing Consolidated Calibration Set Configuration ===\n")
-
-    # Test all configurations
-    test_consolidated_config()
-    test_formatter_params()
-    test_streaming_configurations()
-
-    print("\n🎉 All tests passed! The consolidated configuration is working correctly.")

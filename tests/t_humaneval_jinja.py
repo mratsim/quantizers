@@ -12,12 +12,18 @@ def test_humaneval_jinja_templates():
 
     from quantizers.calibration_sets import CalibrationSetConfig
 
-    # Load our config
-    config_path = Path(__file__).parent / "test_datasets" / "diversoailab_humaneval_rust" / "ds_config.yaml"
+    # Load our config from the main test configuration
+    config_path = Path(__file__).parent / "test_datasets" / "t_calibrate_diverse_columns.yaml"
     config = CalibrationSetConfig.from_file(config_path)
 
-    # Get the dataset config
-    dataset_config = config.datasets[0]
+    # Find the humaneval dataset in the config
+    dataset_config = None
+    for ds in config.datasets:
+        if "diversoailab_humaneval_rust" in ds.dataset:
+            dataset_config = ds
+            break
+
+    assert dataset_config is not None, "Should find diversoailab_humaneval_rust dataset in config"
     prefix = dataset_config.formatter_params.get("prefix", "")
 
     # Verify it contains a Jinja template

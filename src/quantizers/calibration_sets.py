@@ -534,6 +534,13 @@ class CalibrationSet:
                     result = formatter_func(ds_config.columns, row)
                 return {"formatted": result}
 
+            # Note: a function indirection is absolutely necessary due to Python lambda scoping rules
+            # https://github.com/mratsim/quantizers/pull/2#discussion_r2653416980
+            # This would lead to incorrect type 'Dict' instead of 'List' in certain cases
+            #       dataset = dataset.map(
+            #           lambda row: {"formatted": formatter_func(ds_config.columns, row)},
+            #           remove_columns=dataset.column_names,
+            #       )
             dataset = dataset.map(
                 apply_formatter,
                 remove_columns=dataset.column_names,
