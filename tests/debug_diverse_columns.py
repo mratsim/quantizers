@@ -19,12 +19,6 @@ from quantizers.calibration_sets import (
 )
 from quantizers.formatters import DatasetFmt
 
-try:
-    IMPORTS_SUCCESS = True
-except ImportError as e:
-    print(f"Import error: {e}")
-    IMPORTS_SUCCESS = False
-
 
 def debug_chat_completion_formatter():
     """Debug test for chat completion formatter to verify our fix works correctly."""
@@ -138,10 +132,6 @@ def main():
     """Main debug function."""
     print("🔧 Debugging Diverse Columns Formatters")
     print("=" * 50)
-
-    if not IMPORTS_SUCCESS:
-        print("❌ Could not import required modules. Exiting.")
-        return
 
     # Debug individual formatters
     debug_chat_completion_formatter()
