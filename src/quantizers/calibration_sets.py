@@ -514,8 +514,8 @@ class CalibrationSet:
                     template = jinja_env.from_string(template_str)
                     return template.render(row=row)
                 except Exception as e:
-                    logging.warning(f"Failed to render Jinja template: {e}")
-                    return template_str
+                    logging.error(f"Failed to render Jinja template '{template_str}': {e}")
+                    raise
 
             # Apply formatting directly using named function to avoid lambda variable capture issues
             # Pass formatter parameters if they exist
@@ -562,12 +562,10 @@ class CalibrationSet:
                 dataset = Dataset.from_dict({"formatted": [d["formatted"] for d in dataset]})
             else:
                 # For non-streaming, ensure we have exactly the samples we need
-                is_int_sample = isinstance(ds_config.num_samples, int)
-                if is_int_sample and ds_config.num_samples != "all" and len(dataset) > ds_config.num_samples:  # type: ignore[operator, arg-type]
+                if isinstance(ds_config.num_samples, int) and len(dataset) > ds_config.num_samples:  # type: ignore[operator, arg-type]
                     # The mypy type ignore is intentional here because:
-                    # 1. `is_int_sample` ensures ds_config.num_samples is an int in this branch
-                    # 2. `ds_config.num_samples != "all"` is always true when num_samples is an int
-                    # 3. MyPy can't properly track the narrowed type after isinstance checks
+                    # 1. `isinstance(ds_config.num_samples, int)` ensures num_samples is an int
+                    # 2. MyPy can't properly track the narrowed type after isinstance checks
                     dataset = dataset.select(range(ds_config.num_samples))  # type: ignore[arg-type]
 
             # Store for later concatenation

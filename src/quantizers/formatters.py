@@ -116,7 +116,7 @@ class DatasetFmt:
         return data[columns[0]]
 
     @staticmethod
-    def get_formatter(formatter_name: str) -> Any:
+    def get_formatter(formatter_name: str):
         """
         Get the appropriate formatter function by name.
 
@@ -194,11 +194,13 @@ class DatasetFmt:
             raise ValueError(f"DeepMind Code Contests format requires exactly 1 column, got {len(columns)}: {columns}")
 
         # Check if the column value is the entire dataset row (like when using any column name)
-        # or just a part of it
+        # or just a part of it. This fallback handles cases where a generic column name is used
+        # (e.g., "data", "text", or "content") instead of a specific field name in structured data.
         row_data = data[columns[0]]
 
-        # If row_data is a string, it means we selected a column that just contains a string
-        # We need to use the entire data instead
+        # If row_data is a string, it means we selected a column that contains simple text content
+        # rather than structured data. In this case, fall back to using the entire data row,
+        # which may contain more structured information.
         if isinstance(row_data, str):
             row_data = data
 
