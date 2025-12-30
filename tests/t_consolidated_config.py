@@ -243,8 +243,10 @@ def test_yaml_anchor_config():
                 f"Dataset {ds.dataset} should use the same language list"
             )
 
-        # Check that the template references the anchor
-        assert "*language_prefix" not in str(config_path), "File should not contain the literal anchor text"
+        # Verify that the YAML anchor was resolved (literal anchor syntax should not appear in parsed values)
+        for ds in config.datasets:
+            prefix = ds.formatter_params.get("prefix", "")
+            assert "*language_prefix" not in prefix, "YAML anchor should be resolved, not literal"
 
         # Count languages
         languages_str = language_list_match.group(1)
