@@ -1,0 +1,26 @@
+[
+  {
+    "question": "What is the capital city of Australia?",
+    "answer": "The capital city of Australia is Canberra.",
+    "metadata": "geography question",
+    "timestamp": "2023-06-01T00:00:00Z",
+    "category": "geography",
+    "region": "australia"
+  },
+  {
+    "question": "What causes the seasons to change on Earth?",
+    "answer": "The seasons change on Earth due to the planet's 23.5-degree axial tilt and its orbit around the Sun. This tilt means that different parts of Earth receive more direct sunlight at different times of the year, creating seasonal variations in temperature and weather patterns.",
+    "metadata": "science explanation",
+    "timestamp": "2023-06-02T00:00:00Z",
+    "category": "astronomy",
+    "region": "global"
+  },
+  {
+    "question": "How do vaccines work to protect against infectious diseases?",
+    "answer": "Vaccines work by training the immune system to recognize and combat pathogens, such as viruses or bacteria. They contain either weakened or inactivated parts of a particular organism (antigen) that triggers an immune response within the body. This creates antibodies that allow the immune system to fight that disease quickly should it appear in the future.",
+    "metadata": "medical explanation",
+    "timestamp": "2023-06-03T00:00:00Z",
+    "category": "medicine",
+    "region": "global"
+  }
+]

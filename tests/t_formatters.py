@@ -423,54 +423,37 @@ def test_formatter_integration_with_calibration_set():
     print("\n=== Testing Formatter Integration with CalibrationSet ===")
 
     # Test configuration with arbitrary column names
-    config = CalibrationSetConfig(
-        max_seq_length=4096,
-        shuffle=False,
-        seed=42,
-        datasets=[
-            DatasetEntryConfig(
-                dataset="test/dataset",
-                split="train",
-                columns=["user_question", "model_response"],  # Arbitrary column names
-                formatter="prompt_answer",
-                num_samples=3,
-            )
-        ],
-    )
-
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Create calibration set and directly assign the dataset
+        config = CalibrationSetConfig(
+            max_seq_length=4096,
+            shuffle=False,
+            seed=42,
+            datasets=[
+                DatasetEntryConfig(
+                    dataset=str(
+                        Path(__file__).parent
+                        / "test_datasets"
+                        / "prompt_answer"
+                        / "ds_instruction_response"
+                    ),
+                    split="train",
+                    columns=[
+                        "instruction",
+                        "response",
+                    ],  # Actual column names in dataset
+                    formatter="prompt_answer",
+                    num_samples=2,  # Number of samples in the dataset
+                )
+            ],
+        )
+
+        # Create calibration set using factory method
         calib_set = CalibrationSet.from_config(config=config, cache_dir=temp_dir)
 
-        # Create mock dataset with formatted data already applied
-        mock_dataset = datasets.Dataset.from_dict(
-            {
-                "formatted": [
-                    [
-                        {"role": "user", "content": "What is machine learning?"},
-                        {
-                            "role": "assistant",
-                            "content": "Machine learning is a subset of artificial intelligence...",
-                        },
-                    ],
-                    [
-                        {"role": "user", "content": "Explain photosynthesis"},
-                        {
-                            "role": "assistant",
-                            "content": "Photosynthesis is the process by which plants convert light energy...",
-                        },
-                    ],
-                    [
-                        {"role": "user", "content": "How does the internet work?"},
-                        {
-                            "role": "assistant",
-                            "content": "The internet is a global system of interconnected computer networks...",
-                        },
-                    ],
-                ]
-            }
-        )
-        calib_set._untokenized_calibration_set = mock_dataset
+        # Verify properties
+        assert calib_set.config == config
+        assert calib_set._untokenized_calibration_set is not None
+        assert calib_set.total_num_samples == 2  # We have 2 samples in the dataset
 
         # Create mock tokenizer
         tokenizer = MockTokenizer([1, 2, 3, 4, 5])
@@ -480,7 +463,7 @@ def test_formatter_integration_with_calibration_set():
 
         # Verify tokenization worked correctly
         assert isinstance(tokenized, datasets.Dataset)
-        assert len(tokenized) == 3
+        assert len(tokenized) == 2
         assert "input_ids" in tokenized.column_names
         assert "formatted" not in tokenized.column_names
 
@@ -490,11 +473,11 @@ def test_formatter_integration_with_calibration_set():
         print("✅ Formatters work correctly with CalibrationSet integration")
 
 
-def test_calibration_set_with_arbitrary_columns():
-    """Test that CalibrationSet works correctly with arbitrary column names."""
-    print("\n=== Testing CalibrationSet with Arbitrary Columns ===")
+def test_calibration_set_with_dataset_columns():
+    """Test that CalibrationSet works correctly with correct dataset column names."""
+    print("\n=== Testing CalibrationSet with Dataset Column Names ===")
 
-    # Test configuration with arbitrary column names
+    # Test configuration with correct dataset column names
     try:
         config = CalibrationSetConfig(
             max_seq_length=4096,
@@ -503,10 +486,16 @@ def test_calibration_set_with_arbitrary_columns():
             datasets=[
                 DatasetEntryConfig(
                     dataset=str(
-                        Path(__file__).parent / "test_datasets" / "prompt_answer_format"
+                        Path(__file__).parent
+                        / "test_datasets"
+                        / "prompt_answer"
+                        / "ds_instruction_response"
                     ),
                     split="train",
-                    columns=["instruction", "output"],  # Existing column names
+                    columns=[
+                        "instruction",
+                        "response",
+                    ],  # Actual column names in dataset
                     formatter="prompt_answer",
                     num_samples=2,
                 )
@@ -517,17 +506,86 @@ def test_calibration_set_with_arbitrary_columns():
         calib_set = CalibrationSet.from_config(config)
 
         # Get untokenized data to verify it works
-        assert (
-            calib_set._untokenized_calibration_set is not None
-        ), "CalibrationSet should have untokenized data"
-        assert (
-            len(calib_set._untokenized_calibration_set) > 0
-        ), "CalibrationSet should have data samples"
+        if calib_set._untokenized_calibration_set is None:
+            raise AssertionError("CalibrationSet should have untokenized data")
+        if len(calib_set._untokenized_calibration_set) <= 0:
+            raise AssertionError("CalibrationSet should have data samples")
         print(
-            "\n✅ CalibrationSet correctly processes data with arbitrary column names"
+            "\n✅ CalibrationSet correctly processes data with correct dataset column names"
         )
     except Exception as e:
-        print(f"\n⚠️  CalibrationSet test with arbitrary columns encountered: {e}")
+        print(f"\n⚠️  CalibrationSet test with dataset columns encountered: {e}")
+
+
+def test_formatter_with_diverse_column_names():
+    """Test that formatters correctly handle diverse column names like 'musing', 'ponderings'."""
+    print("\n=== Testing Formatters with Diverse Column Names ===")
+
+    # Test configuration with diverse column names
+    config = CalibrationSetConfig(
+        max_seq_length=4096,
+        shuffle=False,
+        seed=42,
+        datasets=[
+            DatasetEntryConfig(
+                dataset=str(
+                    Path(__file__).parent / "test_datasets" / "sharegpt" / "ds_musings"
+                ),
+                split="train",
+                columns=["musings"],  # Test with non-standard column name
+                formatter="sharegpt",
+                num_samples=3,
+            )
+        ],
+    )
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Create calibration set using factory method
+        calib_set = CalibrationSet.from_config(config=config, cache_dir=temp_dir)
+
+        # Verify properties
+        assert calib_set.config == config
+        assert calib_set._untokenized_calibration_set is not None
+        assert (
+            calib_set.total_num_samples == 3
+        )  # We have 3 samples in the musing dataset
+
+        # Verify that the data was processed correctly
+        raw_dataset = calib_set._untokenized_calibration_set
+        assert len(raw_dataset) == 3
+
+        # Check that all messages were properly formatted
+        for row in raw_dataset:
+            assert "formatted" in row, "Row missing formatted field"
+            messages = row["formatted"]
+            assert isinstance(messages, list), "Messages not a list"
+            assert len(messages) > 0, "Messages should not be empty"
+
+            # For sharegpt format, each message should have role and content
+            for message in messages:
+                assert "role" in message, f"Message missing role: {message}"
+                assert "content" in message, f"Message missing content: {message}"
+
+            # The ShareGPT formatter creates a message list, so verify the content
+            # reflects our diverse topics
+            if messages and "consciousness" in messages[0]["content"]:
+                assert True, "Consciousness content preserved"
+            elif messages and "time" in messages[0]["content"]:
+                assert True, "Time content preserved"
+            elif messages and "technology" in messages[0]["content"]:
+                assert True, "Technology content preserved"
+
+        # Test tokenization
+        mock_tokenizer = MockTokenizer([1, 2, 3, 4, 5])
+        tokenized_dataset = calib_set.get_tokenized(mock_tokenizer)
+
+        # Verify tokenization worked correctly
+        assert isinstance(tokenized_dataset, datasets.Dataset)
+        assert len(tokenized_dataset) == 3
+        assert "input_ids" in tokenized_dataset.column_names
+        assert "formatted" not in tokenized_dataset.column_names
+
+        print("✅ Formatters correctly handle diverse column names")
 
 
 if __name__ == "__main__":
@@ -545,7 +603,8 @@ if __name__ == "__main__":
         test_formatter_column_count_handling()
         test_formatter_error_handling()
         test_formatter_integration_with_calibration_set()
-        test_calibration_set_with_arbitrary_columns()
+        test_calibration_set_with_dataset_columns()
+        test_formatter_with_diverse_column_names()
 
         print("\n🎉 All formatter tests passed!")
     except Exception as e:

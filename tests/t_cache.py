@@ -44,24 +44,22 @@ def test_cache_key_generation():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="tests/test_datasets/sharegpt_format",
+                dataset="tests/test_datasets/sharegpt/ds_conversations",
                 split="train",
                 columns=["conversations"],
                 formatter="sharegpt",
                 num_samples=100,
             ),
             DatasetEntryConfig(
-                dataset="tests/test_datasets/prompt_answer_format",
+                dataset="tests/test_datasets/prompt_answer/ds_instruction_response",
                 split="train",
-                columns=["instruction", "output"],
+                columns=["instruction", "response"],
                 formatter="prompt_answer",
                 num_samples=50,
             ),
         ],
     )
 
-    # Create CalibrationSet instance using factory method and generate cache key using static method
-    cache_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
     key = CalibrationSet.compute_cache_key(config)
     print(f"Generated cache key: {key}")
 
@@ -94,7 +92,7 @@ def test_cache_save_and_load():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="tests/test_datasets/raw_text",
+                dataset="tests/test_datasets/raw_text/ds_text",
                 split="train",
                 columns=["text"],
                 formatter="raw_text",
@@ -170,7 +168,7 @@ def test_cache_from_config_and_cache():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="tests/test_datasets/raw_text",
+                dataset="tests/test_datasets/raw_text/ds_text",
                 split="train",
                 columns=["text"],
                 formatter="raw_text",
@@ -223,7 +221,7 @@ def test_cache_missing_error():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="tests/test_datasets/raw_text",
+                dataset="tests/test_datasets/raw_text/ds_text",
                 split="train",
                 columns=["text"],
                 formatter="raw_text",

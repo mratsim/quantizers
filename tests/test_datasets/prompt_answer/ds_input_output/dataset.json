@@ -1,0 +1,26 @@
+[
+  {
+    "input": "Who painted the Mona Lisa?",
+    "output": "The Mona Lisa was painted by Leonardo da Vinci, an Italian Renaissance artist.",
+    "metadata": "art history question",
+    "timestamp": "2023-05-01T00:00:00Z",
+    "source": "art",
+    "difficulty": "easy"
+  },
+  {
+    "input": "What is the difference between RAM and ROM?",
+    "output": "RAM (Random Access Memory) is volatile memory that temporarily stores data that the computer is actively using. It loses all data when the computer is turned off. ROM (Read-Only Memory) is non-volatile memory that permanently stores instructions for the computer's startup process and basic operations. It retains data even when the computer is turned off.",
+    "metadata": "computer science explanation",
+    "timestamp": "2023-05-02T00:00:00Z",
+    "source": "computer science",
+    "difficulty": "medium"
+  },
+  {
+    "input": "Explain the process of photosynthesis in plants.",
+    "output": "Photosynthesis is the process by which plants convert light energy into chemical energy. Plants use sunlight, carbon dioxide, and water to produce glucose (sugar) and oxygen. The process occurs in the chloroplasts of plant cells and involves two main stages: the light-dependent reactions and the Calvin cycle. In the light-dependent reactions, sunlight is captured by chlorophyll and converted into chemical energy in the form of ATP and NADPH. In the Calvin cycle, this energy is used to convert carbon dioxide into glucose.",
+    "metadata": "biology explanation",
+    "timestamp": "2023-05-03T00:00:00Z",
+    "source": "biology",
+    "difficulty": "hard"
+  }
+]

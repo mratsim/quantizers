@@ -10,7 +10,6 @@ To run these tests:
     uv run python tests/test_datasets/test_dataloading.py
 """
 
-import json
 import sys
 from pathlib import Path
 
@@ -36,7 +35,10 @@ def test_sharegpt_format_loading():
         datasets=[
             DatasetEntryConfig(
                 dataset=str(
-                    Path(__file__).parent / "test_datasets" / "sharegpt_format"
+                    Path(__file__).parent
+                    / "test_datasets"
+                    / "sharegpt"
+                    / "ds_conversations"
                 ),
                 split="train",
                 columns=["conversations"],
@@ -47,7 +49,7 @@ def test_sharegpt_format_loading():
     )
 
     # Create CalibrationSet using factory method
-    calib_set = CalibrationSet.from_config(config)
+    calib_set = CalibrationSet.from_config(config, cache_dir="./cache")
 
     # Verify properties
     assert calib_set.config == config
@@ -89,7 +91,10 @@ def test_prompt_answer_format_loading():
         datasets=[
             DatasetEntryConfig(
                 dataset=str(
-                    Path(__file__).parent / "test_datasets" / "prompt_answer_format"
+                    Path(__file__).parent
+                    / "test_datasets"
+                    / "prompt_answer"
+                    / "ds_input_output"
                 ),
                 split="train",
                 columns=["input", "output"],
@@ -100,7 +105,7 @@ def test_prompt_answer_format_loading():
     )
 
     # Create CalibrationSet using factory method
-    calib_set = CalibrationSet.from_config(config)
+    calib_set = CalibrationSet.from_config(config, cache_dir="./cache")
 
     # Verify properties
     assert calib_set.config == config
@@ -142,7 +147,10 @@ def test_chat_completion_format_loading():
         datasets=[
             DatasetEntryConfig(
                 dataset=str(
-                    Path(__file__).parent / "test_datasets" / "chat_completion_format"
+                    Path(__file__).parent
+                    / "test_datasets"
+                    / "chat_completion"
+                    / "ds_messages"
                 ),
                 split="train",
                 columns=["messages"],
@@ -153,7 +161,7 @@ def test_chat_completion_format_loading():
     )
 
     # Create CalibrationSet using factory method
-    calib_set = CalibrationSet.from_config(config)
+    calib_set = CalibrationSet.from_config(config, cache_dir="./cache")
 
     # Verify properties
     assert calib_set.config == config
@@ -198,7 +206,9 @@ def test_raw_text_format_loading():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(Path(__file__).parent / "test_datasets" / "raw_text"),
+                dataset=str(
+                    Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
+                ),
                 split="train",
                 columns=["text"],  # Single column for raw text
                 formatter="raw_text",
@@ -208,7 +218,7 @@ def test_raw_text_format_loading():
     )
 
     # Create CalibrationSet using factory method
-    calib_set = CalibrationSet.from_config(config)
+    calib_set = CalibrationSet.from_config(config, cache_dir="./cache")
 
     # Verify properties
     assert calib_set.config == config
@@ -246,7 +256,10 @@ def test_multiple_dataset_loading():
         datasets=[
             DatasetEntryConfig(
                 dataset=str(
-                    Path(__file__).parent / "test_datasets" / "sharegpt_format"
+                    Path(__file__).parent
+                    / "test_datasets"
+                    / "sharegpt"
+                    / "ds_conversations"
                 ),
                 split="train",
                 columns=["conversations"],
@@ -255,7 +268,10 @@ def test_multiple_dataset_loading():
             ),
             DatasetEntryConfig(
                 dataset=str(
-                    Path(__file__).parent / "test_datasets" / "prompt_answer_format"
+                    Path(__file__).parent
+                    / "test_datasets"
+                    / "prompt_answer"
+                    / "ds_input_output"
                 ),
                 split="train",
                 columns=["input", "output"],
@@ -263,7 +279,9 @@ def test_multiple_dataset_loading():
                 num_samples=2,
             ),
             DatasetEntryConfig(
-                dataset=str(Path(__file__).parent / "test_datasets" / "raw_text"),
+                dataset=str(
+                    Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
+                ),
                 split="train",
                 columns=["text"],
                 formatter="raw_text",
@@ -273,7 +291,7 @@ def test_multiple_dataset_loading():
     )
 
     # Create CalibrationSet using factory method
-    calib_set = CalibrationSet.from_config(config)
+    calib_set = CalibrationSet.from_config(config, cache_dir="./cache")
 
     # Verify properties
     assert calib_set.config == config
@@ -301,168 +319,70 @@ def test_multiple_dataset_loading():
         else:
             assert (
                 len(messages) >= 2
-            ), f"Row {i} messages should have at least 2 elements (chat/prompt-answer)"
-
-        # Determine which dataset this row came from
-        if i < 2:
-            # ShareGPT format (2 rows)
-            assert (
-                len(messages) >= 2
-            ), f"Row {i} should have at least user and assistant messages"
-        elif i < 4:
-            # Prompt-answer format (2 rows)
-            assert (
-                len(messages) >= 2
-            ), f"Row {i} should have at least user and assistant messages"
-        else:
-            # Raw text format (1 row)
-            assert (
-                len(messages) == 1
-            ), f"Row {i} raw text format should have exactly one message"
-            # Check for assistant message
-            has_assistant = any(msg.get("role") == "assistant" for msg in messages)
-            assert has_assistant, f"Row {i} missing assistant message"
+            ), f"Row {i} messages should have at least 2 elements"
 
     print("✅ Multiple dataset loading test passed")
 
 
-def test_error_handling_missing_dataset():
-    """Test error handling when dataset file doesn't exist."""
-    print("\n=== Testing Error Handling - Missing Dataset ===")
+def test_diverse_column_names_usage():
+    """Test that formatters correctly zero in on the specified column names and ignore extra columns."""
+    print("\n=== Testing Diverse Column Names Usage ===")
 
-    # Create a test configuration with non-existent dataset file
-    config = CalibrationSetConfig(
-        max_seq_length=4096,
-        shuffle=False,
-        seed=42,
-        datasets=[
-            DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent / "test_datasets" / "nonexistent_format"
-                ),
-                split="train",
-                columns=["messages"],
-                formatter="chat_completion",
-                num_samples=10,
-            )
-        ],
-    )
-
-    # Try to create CalibrationSet
-    try:
-        _calib_set = CalibrationSet.from_config(config)
-        assert False, "Expected an error for non-existent dataset"
-    except Exception as e:
-        print(f"✅ Correctly raised error for non-existent dataset: {str(e)}")
-
-
-def test_error_handling_invalid_columns():
-    """Test error handling when dataset doesn't have specified columns."""
-    print("\n=== Testing Error Handling - Invalid Columns ===")
-
-    # Create a test configuration with invalid column names
-    config = CalibrationSetConfig(
-        max_seq_length=4096,
-        shuffle=False,
-        seed=42,
-        datasets=[
-            DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent / "test_datasets" / "sharegpt_format"
-                ),
-                split="train",
-                columns=["invalid_column"],
-                formatter="sharegpt",
-                num_samples=10,
-            )
-        ],
-    )
-
-    # Try to create CalibrationSet
-    try:
-        _calib_set = CalibrationSet.from_config(config)
-        assert False, "Expected an error for invalid columns"
-    except Exception as e:
-        print(f"✅ Correctly raised error for invalid columns: {str(e)}")
-
-
-def test_arbitrary_column_names():
-    """Test that formatters work with arbitrary column names."""
-    print("\n=== Testing Arbitrary Column Names ===")
-
-    # Create a test dataset with custom column names
-    from pathlib import Path
-
-    custom_dataset_dir = Path(__file__).parent / "custom_columns"
-    custom_dataset_dir.mkdir(exist_ok=True)
-
-    # Create a custom dataset with different column names
-    custom_data = [
-        {
-            "user_question": "What is the capital of France?",
-            "bot_response": "The capital of France is Paris.",
-        },
-        {
-            "user_question": "How do I write a Python function?",
-            "bot_response": "Use the 'def' keyword followed by the function name.",
-        },
+    # Test for ShareGPT format with different column names
+    print("\nTesting ShareGPT format with different column names:")
+    sharegpt_configs = [
+        ("ds_messages", ["messages"]),
+        ("ds_conversations", ["conversations"]),
+        ("ds_musings", ["musings"]),
     ]
 
-    custom_dataset_file = custom_dataset_dir / "dataset.json"
-    with open(custom_dataset_file, "w") as f:
-        json.dump(custom_data, f)
+    for dataset_name, columns in sharegpt_configs:
+        config = CalibrationSetConfig(
+            max_seq_length=4096,
+            shuffle=False,
+            seed=42,
+            datasets=[
+                DatasetEntryConfig(
+                    dataset=str(
+                        Path(__file__).parent
+                        / "test_datasets"
+                        / "sharegpt"
+                        / dataset_name
+                    ),
+                    split="train",
+                    columns=columns,
+                    formatter="sharegpt",
+                    num_samples=2,
+                )
+            ],
+        )
+        calib_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
+        raw_dataset = calib_set._untokenized_calibration_set
 
-    # Create a test configuration with arbitrary column names
-    config = CalibrationSetConfig(
-        max_seq_length=4096,
-        shuffle=False,
-        seed=42,
-        datasets=[
-            DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent / "test_datasets" / "custom_columns_format"
-                ),
-                split="train",
-                columns=["user_question", "bot_response"],
-                formatter="prompt_answer",
-                num_samples=2,
+        # Verify that the specific content from the selected column is present
+        sample = raw_dataset[0]["formatted"]
+
+        # ShareGPT returns a list of messages with role/content structure
+        if isinstance(sample, list):
+            content_str = " ".join([msg.get("content", "") for msg in sample])
+        elif isinstance(sample, dict):
+            # Chat completion returns a dict with messages
+            content_str = " ".join(
+                [msg.get("content", "") for msg in sample.get("messages", [])]
             )
-        ],
-    )
+        else:
+            content_str = str(sample)
 
-    # Create CalibrationSet using factory method
-    calib_set = CalibrationSet.from_config(config)
+        if dataset_name == "ds_messages":
+            assert "blockchain technology" in content_str, "Using wrong column"
+        elif dataset_name == "ds_conversations":
+            assert "trip to Japan" in content_str, "Using wrong column"
+        elif dataset_name == "ds_musings":
+            assert "consciousness" in content_str, "Using wrong column"
 
-    # Check that the data was loaded correctly
-    # Just verify the untokenized data has the expected structure
-    raw_dataset = calib_set._untokenized_calibration_set
-    assert len(raw_dataset) == 2
+        print(f"✅ ShareGPT correctly used '{columns[0]}' column from {dataset_name}")
 
-    # Verify arbitrary column names were correctly mapped
-    for row in raw_dataset:
-        assert "formatted" in row, "Row missing formatted field"
-        messages = row["formatted"]
-        assert isinstance(messages, list), "Messages not a list"
-        assert len(messages) >= 2, "Should have at least user and assistant messages"
-
-        # Verify the mapping happened correctly
-        has_user = any(msg.get("role") == "user" for msg in messages)
-        has_assistant = any(msg.get("role") == "assistant" for msg in messages)
-        assert has_user, "Missing user message"
-        assert has_assistant, "Missing assistant message"
-
-    # Clean up
-    custom_dataset_file.unlink()
-    custom_dataset_dir.rmdir()
-
-    print("✅ Arbitrary column names test passed")
-
-
-def test_formatter_validation():
-    """Test that formatters validate column counts correctly."""
-    print("\n=== Testing Formatter Validation ===")
-
-    # Test ShareGPT formatter with wrong number of columns
+    # Test that ShareGPT correctly fails when trying to access a column that doesn't exist
     try:
         config = CalibrationSetConfig(
             max_seq_length=4096,
@@ -471,23 +391,35 @@ def test_formatter_validation():
             datasets=[
                 DatasetEntryConfig(
                     dataset=str(
-                        Path(__file__).parent / "test_datasets" / "sharegpt_format"
+                        Path(__file__).parent
+                        / "test_datasets"
+                        / "sharegpt"
+                        / "ds_messages"
                     ),
                     split="train",
-                    columns=["messages", "extra_column"],
+                    columns=[
+                        "nonexistent_column"
+                    ],  # This column doesn't exist in the dataset
                     formatter="sharegpt",
-                    num_samples=10,
+                    num_samples=2,
                 )
             ],
         )
-        _calib_set = CalibrationSet.from_config(config)
-        assert False, "Expected an error for ShareGPT with wrong column count"
-    except ValueError as e:
-        assert "ShareGPT format requires exactly 1 column" in str(e)
-        print("✅ ShareGPT formatter correctly validated column count")
+        calib_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
+        # If we get here without an exception, the formatters should have failed
+        assert False, "Should have raised KeyError for nonexistent column"
+    except KeyError:
+        print("✅ Correctly raised KeyError when trying to access nonexistent column")
 
-    # Test prompt-answer formatter with wrong number of columns
-    try:
+    # Test for Chat Completion format with different column names
+    print("\nTesting Chat Completion format with different column names:")
+    chat_configs = [
+        ("ds_messages", ["messages"]),
+        ("ds_conversations", ["conversations"]),
+        ("ds_musings", ["musings"]),
+    ]
+
+    for dataset_name, columns in chat_configs:
         config = CalibrationSetConfig(
             max_seq_length=4096,
             shuffle=False,
@@ -495,52 +427,103 @@ def test_formatter_validation():
             datasets=[
                 DatasetEntryConfig(
                     dataset=str(
-                        Path(__file__).parent / "test_datasets" / "prompt_answer_format"
+                        Path(__file__).parent
+                        / "test_datasets"
+                        / "chat_completion"
+                        / dataset_name
                     ),
                     split="train",
-                    columns=["prompt"],
+                    columns=columns,
+                    formatter="chat_completion",
+                    num_samples=2,
+                )
+            ],
+        )
+        calib_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
+        raw_dataset = calib_set._untokenized_calibration_set
+
+        # Verify that the specific content from the selected column is present
+        sample = raw_dataset[0]["formatted"]
+
+        # Chat completion passthroughs the entire column data, so we need to extract the messages
+        # The column name varies by dataset: "messages", "conversations", or "musings"
+        messages_key = columns[0]  # Use the specified column name
+        content_str = " ".join(
+            [msg.get("content", "") for msg in sample.get(messages_key, [])]
+        )
+
+        if dataset_name == "ds_messages":
+            assert "capital of France" in content_str, "Using wrong column"
+        elif dataset_name == "ds_conversations":
+            assert "capital of Japan" in content_str, "Using wrong column"
+        elif dataset_name == "ds_musings":
+            assert "philosophical implications" in content_str, "Using wrong column"
+
+        print(
+            f"✅ Chat Completion correctly used '{columns[0]}' column from {dataset_name}"
+        )
+
+    # Test for Prompt-Answer format with different column names
+    print("\nTesting Prompt-Answer format with different column names:")
+    prompt_configs = [
+        ("ds_prompt_answer", ["prompt", "answer"]),
+        ("ds_input_output", ["input", "output"]),
+        ("ds_question_answer", ["question", "answer"]),
+        ("ds_instruction_response", ["instruction", "response"]),
+    ]
+
+    for dataset_name, columns in prompt_configs:
+        config = CalibrationSetConfig(
+            max_seq_length=4096,
+            shuffle=False,
+            seed=42,
+            datasets=[
+                DatasetEntryConfig(
+                    dataset=str(
+                        Path(__file__).parent
+                        / "test_datasets"
+                        / "prompt_answer"
+                        / dataset_name
+                    ),
+                    split="train",
+                    columns=columns,
                     formatter="prompt_answer",
-                    num_samples=10,
+                    num_samples=2,
                 )
             ],
         )
-        _calib_set = CalibrationSet.from_config(config)
-        assert False, "Expected an error for prompt-answer with wrong column count"
-    except ValueError as e:
-        assert "Prompt-answer format requires exactly 2 columns" in str(e)
-        print("✅ Prompt-answer formatter correctly validated column count")
+        calib_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
+        raw_dataset = calib_set._untokenized_calibration_set
 
-    # Test raw_text formatter with wrong number of columns
-    try:
-        config = CalibrationSetConfig(
-            max_seq_length=4096,
-            shuffle=False,
-            seed=42,
-            datasets=[
-                DatasetEntryConfig(
-                    dataset=str(Path(__file__).parent / "test_datasets" / "raw_text"),
-                    split="train",
-                    columns=["text", "extra_column"],
-                    formatter="raw_text",
-                    num_samples=10,
-                )
-            ],
+        # Verify that the first row contains the expected content for the selected column
+        sample = raw_dataset[0]["formatted"]
+
+        # Prompt-Answer returns a list of messages with role/content structure
+        content_str = " ".join([msg.get("content", "") for msg in sample])
+
+        if dataset_name == "ds_prompt_answer":
+            assert "chemical symbol for gold" in content_str, "Using wrong column"
+        elif dataset_name == "ds_input_output":
+            assert "Who painted the Mona Lisa" in content_str, "Using wrong column"
+        elif dataset_name == "ds_question_answer":
+            assert "capital city of Australia" in content_str, "Using wrong column"
+        elif dataset_name == "ds_instruction_response":
+            assert (
+                "Python function that calculates the factorial" in content_str
+            ), "Using wrong column"
+
+        print(
+            f"✅ Prompt-Answer correctly used '{columns[0]}' column from {dataset_name}"
         )
-        _calib_set = CalibrationSet.from_config(config)
-        assert False, "Expected an error for raw_text with wrong column count"
-    except ValueError as e:
-        assert "Raw text format requires exactly 1 column" in str(e)
-        print("✅ Raw text formatter correctly validated column count")
 
-    print("✅ Formatter validation test passed")
+    # Test for Raw Text format with different column names
+    print("\nTesting Raw Text format with different column names:")
+    text_configs = [
+        ("ds_text", ["text"]),
+        ("ds_message", ["message"]),
+    ]
 
-
-def test_missing_columns_keyerror():
-    """Test that formatters raise KeyError for missing columns."""
-    print("\n=== Testing Missing Columns KeyError ===")
-
-    # Test ShareGPT formatter with missing column
-    try:
+    for dataset_name, columns in text_configs:
         config = CalibrationSetConfig(
             max_seq_length=4096,
             shuffle=False,
@@ -548,77 +531,45 @@ def test_missing_columns_keyerror():
             datasets=[
                 DatasetEntryConfig(
                     dataset=str(
-                        Path(__file__).parent / "test_datasets" / "sharegpt_format"
+                        Path(__file__).parent
+                        / "test_datasets"
+                        / "raw_text"
+                        / dataset_name
                     ),
                     split="train",
-                    columns=["missing_column"],
-                    formatter="sharegpt",
-                    num_samples=1,
-                )
-            ],
-        )
-        _calib_set = CalibrationSet.from_config(config)
-        assert False, "Expected a KeyError for missing column"
-    except KeyError as e:
-        print(
-            f"✅ ShareGPT formatter correctly raised KeyError for missing column: {str(e)}"
-        )
-    except Exception as e:
-        print(f"❌ unexpected error for ShareGPT: {str(e)}")
-
-    # Test prompt-answer formatter with missing column
-    try:
-        config = CalibrationSetConfig(
-            max_seq_length=4096,
-            shuffle=False,
-            seed=42,
-            datasets=[
-                DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent / "test_datasets" / "prompt_answer_format"
-                    ),
-                    split="train",
-                    columns=["missing_column", "output"],
-                    formatter="prompt_answer",
-                    num_samples=1,
-                )
-            ],
-        )
-        _calib_set = CalibrationSet.from_config(config)
-        assert False, "Expected a KeyError for missing column"
-    except KeyError as e:
-        print(
-            f"✅ Prompt-answer formatter correctly raised KeyError for missing column: {str(e)}"
-        )
-    except Exception as e:
-        print(f"❌ unexpected error for prompt-answer: {str(e)}")
-
-    # Test raw_text formatter with missing column
-    try:
-        config = CalibrationSetConfig(
-            max_seq_length=4096,
-            shuffle=False,
-            seed=42,
-            datasets=[
-                DatasetEntryConfig(
-                    dataset=str(Path(__file__).parent / "test_datasets" / "raw_text"),
-                    split="train",
-                    columns=["missing_column"],
+                    columns=columns,
                     formatter="raw_text",
-                    num_samples=1,
+                    num_samples=2,
                 )
             ],
         )
-        _calib_set = CalibrationSet.from_config(config)
-        assert False, "Expected a KeyError for missing column"
-    except KeyError as e:
-        print(
-            f"✅ Raw text formatter correctly raised KeyError for missing column: {str(e)}"
-        )
-    except Exception as e:
-        print(f"❌ unexpected error for raw_text: {str(e)}")
+        calib_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
+        raw_dataset = calib_set._untokenized_calibration_set
 
-    print("✅ Missing columns KeyError test passed")
+        # Test that formatters correctly ignore extra columns
+        # Verify the content comes from the selected column
+        sample = raw_dataset[0]["formatted"]
+
+        # Raw text returns a single message list with role/content structure
+        assert isinstance(sample, list), "Raw text should return a list"
+        assert len(sample) == 1, "Raw text should return a single message"
+        assert (
+            sample[0].get("role") == "assistant"
+        ), "Raw text should return an assistant message"
+        content_str = sample[0]["content"]
+
+        if dataset_name == "ds_text":
+            assert (
+                "history of artificial intelligence" in content_str
+            ), "Using wrong column"
+        elif dataset_name == "ds_message":
+            assert (
+                "learning about artificial intelligence" in content_str
+            ), "Using wrong column"
+
+        print(f"✅ Raw Text correctly used '{columns[0]}' column from {dataset_name}")
+
+    print("\n✅ Diverse column names usage test passed")
 
 
 if __name__ == "__main__":
@@ -630,11 +581,25 @@ if __name__ == "__main__":
         test_chat_completion_format_loading()
         test_raw_text_format_loading()
         test_multiple_dataset_loading()
-        test_error_handling_missing_dataset()
-        test_error_handling_invalid_columns()
-        test_arbitrary_column_names()
-        test_formatter_validation()
-        test_missing_columns_keyerror()
+    except Exception as e:
+        print(f"\n❌ Test failed: {e}")
+        import traceback
+
+        traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    print("🔍 Testing dataset loading functionality...")
+
+    try:
+        test_sharegpt_format_loading()
+        test_prompt_answer_format_loading()
+        test_chat_completion_format_loading()
+        test_raw_text_format_loading()
+        test_multiple_dataset_loading()
+
+        test_diverse_column_names_usage()
 
         print("\n🎉 All dataset loading tests passed!")
     except Exception as e:

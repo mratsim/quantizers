@@ -1,0 +1,26 @@
+[
+  {
+    "instruction": "Write a Python function that calculates the factorial of a number.",
+    "response": "Here's a Python function that calculates the factorial of a number:\n\ndef factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    else:\n        return n * factorial(n-1)\n\n# Example usage\nprint(factorial(5))  # Output: 120",
+    "metadata": "programming instruction",
+    "timestamp": "2023-07-01T00:00:00Z",
+    "category": "programming",
+    "language": "python"
+  },
+  {
+    "instruction": "Explain the process of photosynthesis in simple terms.",
+    "response": "Photosynthesis is how plants make their own food using sunlight. Here's how it works:\n\n1. Plants take in carbon dioxide from the air through their leaves\n2. Water is absorbed by the roots from the soil\n3. Sunlight energy is captured by chlorophyll in the leaves\n4. The plant uses the energy to convert water and carbon dioxide into glucose (sugar) and oxygen\n5. The sugar is used for energy and growth\n6. Oxygen is released back into the air\n\nThe chemical equation is: 6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂",
+    "metadata": "science instruction",
+    "timestamp": "2023-07-02T00:00:00Z",
+    "category": "biology",
+    "topic": "plant biology"
+  },
+  {
+    "instruction": "Provide step-by-step instructions for changing a car tire.",
+    "response": "Here's how to change a car tire:\n\n1. Find a safe, flat location to change your tire\n2. Turn on hazard lights and engage parking brake\n3. Place wheel chocks behind the wheels\n4. Get your spare tire, jack, and lug wrench\n5. Loosen the lug nuts before lifting the car\n6. Position the jack and raise the car until the flat tire is off the ground\n7. Remove the flat tire and replace with spare\n8. Hand-tighten the lug nuts\n9. Lower the car slightly and tighten the lug nuts in a star pattern\n10. Fully lower the car and final tighten\n11. Check the tire pressure\n12. Stow equipment and flat tire\n\nSafety tips: Never work under a car supported only by a jack. Use emergency brake and wheel chocks.",
+    "metadata": "practical instruction",
+    "timestamp": "2023-07-03T00:00:00Z",
+    "category": "automotive",
+    "difficulty": "medium"
+  }
+]
