@@ -65,3 +65,6 @@ markers = [
 
 [tool.black]
 extend-exclude = "scripts/old_scripts/"
+
+[tool.mypy]
+ignore_missing_imports = true

@@ -9,14 +9,14 @@ It creates test configurations and verifies that cache keys are generated correc
 import sys
 from pathlib import Path
 
+# Add the quantizers directory to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 from quantizers.calibration_sets import (
     CalibrationSet,
     CalibrationSetConfig,
     DatasetEntryConfig,
 )
-
-# Add the quantizers directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
 def main():

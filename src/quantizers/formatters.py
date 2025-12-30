@@ -12,6 +12,7 @@ Each formatter receives:
 The formatters should use these column names to find the relevant data they need.
 """
 
+import logging
 from typing import Any, Callable, Dict, List
 
 
@@ -49,14 +50,18 @@ class DatasetFmt:
         conversations = data[columns[0]]
 
         role_mapping = {"system": "system", "human": "user", "gpt": "assistant"}
+        logger = logging.getLogger(__name__)
 
         messages = []
-        for entry in conversations:
+        for entry_idx, entry in enumerate(conversations):
             if (
                 not isinstance(entry, dict)
                 or "from" not in entry
                 or "value" not in entry
             ):
+                logger.warning(
+                    f"Skipping invalid conversation entry {entry_idx}: {entry}"
+                )
                 continue
 
             role = role_mapping.get(entry.get("from", ""), "user")

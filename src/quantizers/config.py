@@ -78,9 +78,12 @@ class QuantizationRunConfig:
                 parent_dir = main_config_path.parent
 
                 # Handle paths starting with "configs/"
-                if calib_set_path.startswith("configs/"):
+                configs_prefix = "configs/"
+                if calib_set_path.startswith(configs_prefix):
                     # Skip the "configs/" prefix to avoid duplication
-                    relative_path = calib_set_path[8:]  # Remove "configs/" prefix
+                    relative_path = calib_set_path[
+                        len(configs_prefix) :
+                    ]  # Remove prefix using length
                     calib_set_path = str(parent_dir / relative_path)
                 else:
                     calib_set_path = str(parent_dir / calib_set_path)

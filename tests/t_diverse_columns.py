@@ -15,6 +15,8 @@ To run these tests:
 import sys
 from pathlib import Path
 
+import pytest
+
 import datasets
 
 from quantizers.calibration_sets import (
@@ -313,6 +315,49 @@ def main():
 
         traceback.print_exc()
         sys.exit(1)
+
+
+def test_calibration_set_with_arbitrary_columns():
+    """Test that CalibrationSet works correctly with arbitrary column names."""
+    print("\n=== Testing CalibrationSet with Arbitrary Columns ===")
+
+    # Test configuration with arbitrary column names
+    try:
+        config = CalibrationSetConfig(
+            max_seq_length=4096,
+            shuffle=False,
+            seed=42,
+            datasets=[
+                DatasetEntryConfig(
+                    dataset=str(
+                        Path(__file__).parent
+                        / "test_datasets"
+                        / "prompt_answer"
+                        / "ds_input_output"
+                    ),
+                    split="train",
+                    columns=["input", "output"],  # Existing column names in dataset
+                    formatter="prompt_answer",
+                    num_samples=2,
+                )
+            ],
+        )
+
+        # Create CalibrationSet with the config
+        calib_set = CalibrationSet.from_config(config)
+
+        # Get untokenized data to verify it works
+        assert (
+            calib_set._untokenized_calibration_set is not None
+        ), "CalibrationSet should have untokenized data"
+        assert (
+            len(calib_set._untokenized_calibration_set) > 0
+        ), "CalibrationSet should have data samples"
+        print(
+            "\n✅ CalibrationSet correctly processes data with arbitrary column names"
+        )
+    except Exception as e:
+        pytest.fail(f"CalibrationSet test with arbitrary columns failed: {e}")
 
 
 if __name__ == "__main__":

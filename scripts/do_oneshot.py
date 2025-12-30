@@ -89,7 +89,7 @@ def load_model_and_tokenizer(model_name: str, revision: str = "main"):
         low_cpu_mem_usage=True,
     )
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, revision=revision)
 
     return model, tokenizer
 
@@ -163,8 +163,12 @@ def main():
     # Load quantization recipe from YAML file
     recipe_path = config.quantization.recipe
     if not Path(recipe_path).is_absolute() and args.config:
-        main_config_path = Path(args.config)
-        recipe_path = str(main_config_path.parent / "recipes" / recipe_path)
+        # Try relative to config file first
+        candidate = Path(args.config).parent / recipe_path
+        if not candidate.exists():
+            # Fall back to recipes subdirectory
+            candidate = Path(args.config).parent / "recipes" / recipe_path
+        recipe_path = str(candidate)
 
     # Verify recipe file exists
     if not Path(recipe_path).exists():

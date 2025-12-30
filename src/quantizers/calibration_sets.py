@@ -74,8 +74,10 @@ class DatasetEntryConfig:
             raise ValueError("formatter is required in calibration entry")
 
         num_samples = data.get("num_samples", None)
-        if isinstance(num_samples, str) and num_samples == "all":
-            num_samples = "all"  # Special value to indicate use all samples
+        if num_samples is None:
+            raise ValueError("num_samples is required in calibration entry")
+        elif isinstance(num_samples, str) and num_samples == "all":
+            pass  # Special value to indicate use all samples
         elif not (isinstance(num_samples, int) and num_samples > 0):
             raise ValueError("num_samples must be a positive integer or 'all'")
 
@@ -204,7 +206,7 @@ class CalibrationSet:
        - `save_to_cache()`: Save consolidated (untokenized) data to cache
        - `compute_cache_key()`: Generate deterministic cache key from config
 
-    2. DATA CONsolidation/Formatting:
+    2. DATA CONSOLIDATION/Formatting:
        - `_consolidate_datasets()`: Loads, formats, and filters raw datasets
        - Stores only untokenized data to maintain proper caching
 
@@ -560,10 +562,6 @@ class CalibrationSet:
         if len(self._untokenized_calibration_set) == 0:
             logging.warning("Cannot save empty dataset to cache")
             return
-
-        # Check if required modules are available
-        if Dataset is None:
-            raise ImportError("datasets package is required for caching")
 
         cache_key = CalibrationSet.compute_cache_key(self.config)
         cache_path = self.cache_dir / cache_key

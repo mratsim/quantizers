@@ -6,13 +6,13 @@ quantization of large language models.
 
 Main Components:
 - config: Configuration loading and validation
-- calibration_set: Dataset loading and caching
+- calibration_sets: Dataset loading and caching
 - logging_: Structured logging for runs
 - formatters: Dataset format converters
 
 Quick Start:
     from quantizers.config import load_quantization_config, CalibrationSetConfig
-    from quantizers.calibration_set import CalibrationSet
+    from quantizers.calibration_sets import CalibrationSet
 
     config = load_quantization_config("configs/quantize_model.yaml")
     calib_set = CalibrationSet.from_config(config.calibration_set_config)
@@ -37,6 +37,8 @@ __all__ = [
     "ModelConfig",
     "QuantizationConfig",
     "CalibrationSetConfig",
+    # CalibrationSets
+    "CalibrationSet",
     # Formatters
     "DatasetFmt",
 ]

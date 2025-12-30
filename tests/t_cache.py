@@ -20,6 +20,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+# Add the source directory to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+
 import datasets
 
 from quantizers.calibration_sets import (
@@ -27,9 +30,6 @@ from quantizers.calibration_sets import (
     CalibrationSetConfig,
     DatasetEntryConfig,
 )
-
-# Add the source directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 
 def test_cache_key_generation():
