@@ -45,10 +45,10 @@ class DatasetFmt:
                 f"got {len(columns)}: {columns}"
             )
         
-        # Extract conversation list from the specified column
-        conversations = data.get(columns[0], [])
-        if not conversations or not isinstance(conversations, list):
-            return []
+        # Extract conversation list from the specified column - mandatory column
+        conversations = data[columns[0]]
+        
+
         
         role_mapping = {
             "system": "system",
@@ -90,9 +90,9 @@ class DatasetFmt:
                 f"got {len(columns)}: {columns}"
             )
         
-        # Extract prompt and answer using arbitrary column names
-        prompt = data.get(columns[0], "")
-        answer = data.get(columns[1], "")
+        # Extract prompt and answer using arbitrary column names - mandatory columns
+        prompt = data[columns[0]]
+        answer = data[columns[1]]
         
         messages = []
         
@@ -181,11 +181,10 @@ class DatasetFmt:
                 f"got {len(columns)}: {columns}"
             )
         
-        # Extract text from the arbitrary column
-        text_content = data.get(columns[0], "")
+        # Extract text from the arbitrary column - mandatory column
+        text_content = data[columns[0]]
         
-        if not text_content:
-            return []
+
         
         return [
             {

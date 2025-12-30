@@ -8,4 +8,4 @@ model:
 quantization:
   recipe: "recipe_awq_w4a16.yaml"
 
-calibration_set: "configs/calibration_sets/calibrate_quick_test.yaml"
+calibration_set: "configs/calibration_sets/calibrate_multi_format_test.yaml"

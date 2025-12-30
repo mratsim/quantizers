@@ -382,22 +382,11 @@ class CalibrationSet:
             # Apply formatter function
             formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
             
-            # Extract data using the specified columns
-            if len(ds_config.columns) == 1:
-                data = dataset[ds_config.columns[0]]
-            else:
-                data = dict(zip(ds_config.columns, [dataset[col] for col in ds_config.columns]))
-            
-            # Define a function to apply formatting to each row
-            def format_row(row):
-                if len(ds_config.columns) == 1:
-                    data = row[ds_config.columns[0]]
-                else:
-                    data = dict(zip(ds_config.columns, [row[col] for col in ds_config.columns]))
-                return {"formatted": formatter_func(ds_config.columns, data)}
-            
-            # Apply formatting
-            dataset = dataset.map(format_row, remove_columns=dataset.column_names)
+            # Apply formatting directly
+            dataset = dataset.map(
+                lambda row: {"formatted": formatter_func(ds_config.columns, row)},
+                remove_columns=dataset.column_names
+            )
             
             # Store for later concatenation
             all_datasets.append(dataset)
