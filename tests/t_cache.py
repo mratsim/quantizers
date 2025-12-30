@@ -37,23 +37,23 @@ def test_cache_key_generation():
     print("\n=== Testing Cache Key Generation ===")
 
     # Create a test configuration
+    # Create a test configuration with local test datasets
     config = CalibrationSetConfig(
         max_seq_length=4096,
         shuffle=True,
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="test/dataset1",
+                dataset="tests/test_datasets/sharegpt_format",
                 split="train",
-                columns=["messages"],
+                columns=["conversations"],
                 formatter="sharegpt",
                 num_samples=100,
             ),
             DatasetEntryConfig(
-                dataset="test/dataset2",
-                split="validation",
-                subset="v1",
-                columns=["input", "output"],
+                dataset="tests/test_datasets/prompt_answer_format",
+                split="train",
+                columns=["instruction", "output"],
                 formatter="prompt_answer",
                 num_samples=50,
             ),
@@ -87,18 +87,18 @@ def test_cache_save_and_load():
     # Create test data with a simple format
     test_data = [{"text": f"Sample {i}"} for i in range(10)]
 
-    # Create a test configuration
+    # Create a test configuration with local test dataset
     config = CalibrationSetConfig(
         max_seq_length=4096,
         shuffle=False,
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="test/dataset",
+                dataset="tests/test_datasets/raw_text",
                 split="train",
                 columns=["text"],
                 formatter="raw_text",
-                num_samples=10,
+                num_samples=5,  # Raw text dataset only has 5 samples
             )
         ],
     )
@@ -150,12 +150,13 @@ def test_cache_save_and_load():
             ],
         )
 
-        # Loading with different config should NOT raise ValueError
-        # It should gracefully return an empty cache set since the cache keys won't match
-        _different_cache_set = CalibrationSet.from_cache(different_config, temp_dir)
-        # This should return a CalibrationSet with no cached data
-        assert _different_cache_set._untokenized_calibration_set is None
-        print("✅ Correctly returned None for cache with different config")
+        # Loading with different config should raise FileNotFoundError since cache is missing
+        try:
+            _different_cache_set = CalibrationSet.from_cache(different_config, temp_dir)
+            assert False, "Should have raised FileNotFoundError for missing cache"
+        except FileNotFoundError as e:
+            assert "Cache not found for configuration" in str(e)
+            print("✅ Correctly raised FileNotFoundError for missing cache")
 
 
 def test_cache_from_config_and_cache():
@@ -180,13 +181,13 @@ def test_cache_from_config_and_cache():
 
     # Create a temporary directory for testing
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Create CalibrationSet from config (should build and cache data)
-        cache_set = CalibrationSet.from_config(config, cache_dir=temp_dir)
+        # Create CalibrationSet instance using factory method and populate with test data
+        cache_set = CalibrationSet.from_config(config=config, cache_dir=temp_dir)
 
         # Verify properties
         assert cache_set.config == config
         assert cache_set._untokenized_calibration_set is not None
-        assert cache_set.total_num_samples == 3
+        assert cache_set.total_num_samples == 3  # We requested 3 samples
 
         print(
             f"✅ Created calibration set with {cache_set.total_num_samples} total samples"
@@ -209,6 +210,41 @@ def test_cache_from_config_and_cache():
         assert len(cache_set_from_cache._untokenized_calibration_set) == 3
 
         print("✅ Successfully loaded from cache")
+
+
+def test_cache_missing_error():
+    """Test that from_cache raises error when cache is missing."""
+    print("\n=== Testing Missing Cache Error ===")
+
+    # Create a test configuration
+    config = CalibrationSetConfig(
+        max_seq_length=4096,
+        shuffle=False,
+        seed=42,
+        datasets=[
+            DatasetEntryConfig(
+                dataset="tests/test_datasets/raw_text",
+                split="train",
+                columns=["text"],
+                formatter="raw_text",
+                num_samples=3,
+            )
+        ],
+    )
+
+    # Create a temporary directory for testing
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # First verify cache is not cached
+        assert not CalibrationSet.is_cached(config, temp_dir)
+
+        # Then try to load from cache - should raise FileNotFoundError
+        try:
+            _cache_set = CalibrationSet.from_cache(config, temp_dir)
+            assert False, "Should have raised FileNotFoundError for missing cache"
+        except FileNotFoundError as e:
+            assert "Cache not found for configuration" in str(e)
+            assert "Use CalibrationSet.is_cached()" in str(e)
+            print("✅ Correctly raised FileNotFoundError with helpful message")
 
 
 def test_cache_key_consistency():

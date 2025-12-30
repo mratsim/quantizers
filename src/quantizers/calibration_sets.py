@@ -299,19 +299,25 @@ class CalibrationSet:
         cache_key = CalibrationSet.compute_cache_key(config)
         cache_path = instance.cache_dir / cache_key
 
-        if cache_path.exists():
-            try:
-                logging.info(f"Loading from cache: {cache_path}")
-                # Load directly as HuggingFace Dataset from Parquet
-                dataset = Dataset.from_parquet(str(cache_path))
+        if not cache_path.exists():
+            raise FileNotFoundError(
+                f"Cache not found for configuration. Use CalibrationSet.is_cached() to check "
+                f"before loading, or CalibrationSet.from_config() to build from raw data. "
+                f"Expected cache file: {cache_path}"
+            )
+        
+        try:
+            logging.info(f"Loading from cache: {cache_path}")
+            # Load directly as HuggingFace Dataset from Parquet
+            dataset = Dataset.from_parquet(str(cache_path))
 
-                # Validate the loaded dataset has samples
-                if len(dataset) == 0:
-                    logging.warning(f"Cache found but empty: {cache_path}")
-                else:
-                    instance._untokenized_calibration_set = dataset
-            except Exception as e:
-                logging.warning(f"Failed to load cache file {cache_path}: {e}")
+            # Validate the loaded dataset has samples
+            if len(dataset) == 0:
+                raise ValueError(f"Cache found but empty: {cache_path}")
+            else:
+                instance._untokenized_calibration_set = dataset
+        except Exception as e:
+            raise RuntimeError(f"Failed to load cache file {cache_path}: {e}") from e
 
         return instance
 
