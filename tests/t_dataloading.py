@@ -338,7 +338,7 @@ def test_error_handling_missing_dataset():
 
     # Try to create CalibrationSet
     try:
-        _calib_set = CalibrationSet.from_config(config)  # noqa: F841
+        _calib_set = CalibrationSet.from_config(config)
         assert False, "Expected an error for non-existent dataset"
     except Exception as e:
         print(f"✅ Correctly raised error for non-existent dataset: {str(e)}")
@@ -368,7 +368,7 @@ def test_error_handling_invalid_columns():
 
     # Try to create CalibrationSet
     try:
-        _calib_set = CalibrationSet.from_config(config)  # noqa: F841
+        _calib_set = CalibrationSet.from_config(config)
         assert False, "Expected an error for invalid columns"
     except Exception as e:
         print(f"✅ Correctly raised error for invalid columns: {str(e)}")
@@ -514,7 +514,7 @@ def test_formatter_validation():
                 )
             ],
         )
-        _calib_set = CalibrationSet.from_config(config)  # noqa: F841
+        _calib_set = CalibrationSet.from_config(config)
         assert False, "Expected an error for raw_text with wrong column count"
     except ValueError as e:
         assert "Raw text format requires exactly 1 column" in str(e)
@@ -597,7 +597,7 @@ def test_missing_columns_keyerror():
                 )
             ],
         )
-        _calib_set = CalibrationSet.from_config(config)  # noqa: F841
+        _calib_set = CalibrationSet.from_config(config)
         assert False, "Expected a KeyError for missing column"
     except KeyError as e:
         print(
