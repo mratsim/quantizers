@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+import sys
+from pathlib import Path
+
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+
+def test_humaneval_jinja_templates():
+    """Test that Jinja templates work with our test dataset."""
+    from jinja2 import Environment, StrictUndefined
+
+    from quantizers.calibration_sets import CalibrationSetConfig
+
+    # Load our config
+    config_path = Path(__file__).parent / "test_datasets" / "diversoailab_humaneval_rust" / "ds_config.yaml"
+    config = CalibrationSetConfig.from_file(config_path)
+
+    # Get the dataset config
+    dataset_config = config.datasets[0]
+    prefix = dataset_config.formatter_params.get("prefix", "")
+
+    # Verify it contains a Jinja template
+    assert "{{" in prefix and "}}" in prefix, "Should contain Jinja template"
+
+    # Test template rendering
+    jinja_env = Environment(undefined=StrictUndefined, autoescape=True)
+    jinja_env.globals.update({"hash": hash})
+
+    # Test with a few different rows
+    languages = ["Python", "Rust", "JavaScript", "Java", "C++"]
+    found_languages = set()
+
+    for i in range(5):
+        sample_row = {"prompt": f"Test prompt {i}"}
+        template = jinja_env.from_string(prefix)
+        rendered = template.render(row=sample_row)
+        # Extract language from the rendered string
+        for lang in languages:
+            if lang in rendered:
+                found_languages.add(lang)
+                break
+
+    # Should have found multiple languages
+    assert len(found_languages) >= 2, f"Should find multiple languages, found: {found_languages}"
+
+    # Test with the actual dataset
+    from datasets import load_dataset
+
+    dataset = load_dataset(str(Path(__file__).parent / "test_datasets" / "diversoailab_humaneval_rust"), split="train")
+
+    # Verify we have 10 samples
+    assert len(dataset) == 10, f"Expected 10 samples, got {len(dataset)}"
+
+    print("✅ Jinja templates work correctly with our test dataset")
