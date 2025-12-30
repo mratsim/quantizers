@@ -18,6 +18,7 @@ repos:
     hooks:
       - id: bandit
         args: [-r, src/]
+        exclude: tests/
 
   - repo: https://github.com/crate-ci/typos
     rev: v1.22.8
