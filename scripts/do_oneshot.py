@@ -19,6 +19,7 @@ from llmcompressor import oneshot
 
 from quantizers.calibration_sets import CalibrationSet
 from quantizers.config import load_quantization_config
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Setup environment variables to avoid warnings
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
@@ -81,8 +82,6 @@ def load_model_and_tokenizer(model_name: str, revision: str = "main"):
     """Load model and tokenizer for quantization."""
     logging.info(f"Loading model: {model_name}")
 
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         revision=revision,
@@ -110,11 +109,14 @@ def main():
     if args.output:
         output_dir = args.output
     else:
-        # Generate output directory from model name
+        # Generate output directory based on model name and recipe
         model_name = config.model.name
         if "/" in model_name:
             model_name = model_name.split("/")[1]
-        output_dir = f"outputs/{model_name}-AWQ"
+
+        # Extract recipe name from path to make output directory dynamic
+        recipe_name = Path(config.quantization.recipe).stem.replace("recipe_", "")
+        output_dir = f"outputs/{model_name}-{recipe_name}"
 
     # Load model and tokenizer
     model, tokenizer = load_model_and_tokenizer(
