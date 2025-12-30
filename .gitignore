@@ -10,6 +10,9 @@ wheels/
 .venv
 uv.lock
 .coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
 # llmcompressor
 sparse_logs/

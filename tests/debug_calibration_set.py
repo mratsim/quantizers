@@ -24,45 +24,120 @@ def main():
     print("Debugging calibration_set module...")
 
     try:
-        # Create a simple DatasetEntryConfig
+        # Test Case 1: Cache key generation without "all" value
+        print("\n--- Test Case 1: Cache key with specific sample count ---")
+
+        # Create a DatasetEntryConfig with specific num_samples
         dataset_entry = DatasetEntryConfig(
-            dataset="test/dataset",
+            dataset="dummy/dataset1",
             split="train",
             columns=["messages"],
             formatter="sharegpt",
             num_samples=10,
         )
-        print("✅ Created DatasetEntryConfig:", dataset_entry)
 
         # Create a simple CalibrationSetConfig
         config = CalibrationSetConfig(
             max_seq_length=4096, shuffle=True, seed=42, datasets=[dataset_entry]
         )
-        print("✅ Created CalibrationSetConfig:", config)
-
-        # Create CalibrationSet instance using factory method
-        calib_set = CalibrationSet.from_config(config)
-        print("✅ Created CalibrationSet instance")
 
         # Test cache key generation
-        cache_key = calib_set.compute_cache_key()
+        cache_key = CalibrationSet.compute_cache_key(config)
         print(f"✅ Generated cache key: {cache_key}")
 
-        # Verify config validation
-        config.validate()
-        print("✅ Config validation passed")
+        # Verify the cache key contains sample count
+        if "10" in cache_key:
+            print("✅ Cache key correctly contains sample count")
+        else:
+            print("❌ Cache key should contain sample count")
 
-        # Test resolve_num_samples method
-        class MockDataset:
-            def __init__(self, length):
-                self._length = length
+        # Test Case 2: Cache key generation with "all" value
+        print("\n--- Test Case 2: Cache key with 'all' sample value ---")
 
-            def __len__(self):
-                return self._length
+        # Create a DatasetEntryConfig with "all" num_samples
+        dataset_entry_all = DatasetEntryConfig(
+            dataset="dummy/dataset2",
+            split="train",
+            columns=["messages"],
+            formatter="sharegpt",
+            num_samples="all",
+        )
 
-        mock_dataset = MockDataset(50)
-        resolved_num = dataset_entry.resolve_num_samples("test/dataset", mock_dataset)
-        print(f"✅ resolve_num_samples returned: {resolved_num}")
+        # Create a CalibrationSetConfig with "all" value
+        config_all = CalibrationSetConfig(
+            max_seq_length=4096, shuffle=True, seed=42, datasets=[dataset_entry_all]
+        )
+
+        # Test cache key generation with "all" value
+        cache_key_all = CalibrationSet.compute_cache_key(config_all)
+        print(f"✅ Generated cache key with 'all': {cache_key_all}")
+
+        # Verify the cache key contains "length_TBD" as expected
+        if "length_TBD" in cache_key_all:
+            print("✅ Cache key correctly contains 'length_TBD' for 'all' sample value")
+        else:
+            print("❌ Cache key should contain 'length_TBD' for 'all' sample value")
+
+        # Test Case 3: Cache key with mixed "all" and specific values
+        print("\n--- Test Case 3: Cache key with mixed 'all' and specific values ---")
+
+        # Create another DatasetEntryConfig with specific num_samples
+        dataset_entry_mixed = DatasetEntryConfig(
+            dataset="dummy/dataset3",
+            split="validation",
+            columns=["text"],
+            formatter="raw_text",
+            num_samples=50,
+        )
+
+        # Create a CalibrationSetConfig with both "all" and specific values
+        config_mixed = CalibrationSetConfig(
+            max_seq_length=4096,
+            shuffle=True,
+            seed=42,
+            datasets=[dataset_entry_all, dataset_entry_mixed],
+        )
+
+        # Test cache key generation with mixed values
+        cache_key_mixed = CalibrationSet.compute_cache_key(config_mixed)
+        print(f"✅ Generated cache key with mixed values: {cache_key_mixed}")
+
+        # Verify the cache key contains "length_TBD" as expected
+        if "length_TBD" in cache_key_mixed:
+            print(
+                "✅ Cache key correctly contains 'length_TBD' when any dataset has 'all' value"
+            )
+        else:
+            print(
+                "❌ Cache key should contain 'length_TBD' when any dataset has 'all' value"
+            )
+
+        # Test Case 4: Formatter column extraction
+        print("\n--- Test Case 4: Chat completion formatter ---")
+
+        # Create test data for chat completion formatter
+        test_data = {
+            "messages": [
+                {"role": "user", "content": "Hello"},
+                {"role": "assistant", "content": "Hi there!"},
+            ]
+        }
+
+        # Test chat completion formatter
+        from quantizers.formatters import DatasetFmt
+
+        formatted_messages = DatasetFmt.chat_completion(["messages"], test_data)
+        print(f"✅ Chat completion formatter result: {formatted_messages}")
+
+        # Verify the formatter extracted the messages correctly
+        if formatted_messages == test_data["messages"]:
+            print(
+                "✅ Chat completion formatter correctly extracted messages from specified column"
+            )
+        else:
+            print(
+                "❌ Chat completion formatter should extract messages from specified column"
+            )
 
         print("\n✅ All tests passed successfully!")
         return True

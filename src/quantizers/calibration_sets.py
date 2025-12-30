@@ -392,13 +392,23 @@ class CalibrationSet:
         json_str = json.dumps(canonical, sort_keys=True)
         hash_prefix = hashlib.sha256(json_str.encode()).hexdigest()[:7]
 
-        # Calculate total samples
-        total_samples = sum(
-            int(ds.num_samples if ds.num_samples is not None else 0)
-            for ds in config.datasets
-        )
+        # Calculate total samples for the filename
+        total_samples = 0
+        total_samples_str = ""
+        for ds in config.datasets:
+            if isinstance(ds.num_samples, str) and ds.num_samples == "all":
+                total_samples_str = "length_TBD"
+                break
+            elif isinstance(ds.num_samples, int) and ds.num_samples > 0:
+                total_samples += ds.num_samples
+            else:
+                raise FileNotFoundError(
+                    f"Invalid sample count in dataset {ds.dataset}: {ds.num_samples}"
+                )
+        if total_samples_str == "":
+            total_samples_str = str(total_samples)
 
-        return f"{hash_prefix}-{total_samples}.parquet"
+        return f"{hash_prefix}-{total_samples_str}.parquet"
 
     # _build_tokenized_dataset method removed - replaced by _consolidate_datasets() and get_tokenized()
     # methods to maintain proper separation of concerns between data loading and tokenization.

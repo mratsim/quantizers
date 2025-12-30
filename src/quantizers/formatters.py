@@ -102,16 +102,20 @@ class DatasetFmt:
         return messages
 
     @staticmethod
-    def chat_completion(columns: List[str], data: Any) -> List[Dict[str, str]]:
+    def chat_completion(
+        columns: List[str], data: Dict[str, Any]
+    ) -> List[Dict[str, str]]:
         """
-        Extracts messages from the specified column or handles data directly.
+        Convert chat completion format to chat completion format.
+
+        Extracts messages from the specified column and returns them for apply_chat_template.
 
         Args:
             columns: Names of the columns containing the data
-            data: Extracted data from the dataset (can be list or dict)
+            data: Extracted data from the dataset
 
         Returns:
-            The messages array
+            The messages array extracted from the specified column
         """
         # Enforce correct number of columns
         if len(columns) != 1:
@@ -120,9 +124,8 @@ class DatasetFmt:
                 f"got {len(columns)}: {columns}"
             )
 
-        # The data parameter is already the extracted content of the specified column.
-        # Passthrough directly to apply_chat_template.
-        return data
+        # Extract messages from the specified mandatory column
+        return data[columns[0]]
 
     @staticmethod
     def get_formatter(formatter_name: str) -> Callable:

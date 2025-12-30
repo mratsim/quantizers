@@ -205,11 +205,11 @@ def test_chat_completion_formatter_with_arbitrary_columns():
         ]
     }
 
-    # Test that the formatter passthrough the direct data
+    # Test that the formatter extracts data from the specified column
     columns = ["conversation_data"]
-    result = DatasetFmt.chat_completion(columns, mock_data["conversation_data"])
+    result = DatasetFmt.chat_completion(columns, mock_data)
 
-    # Verify the formatter returns the messages data directly
+    # Verify the formatter extracts the messages data correctly
     assert result == mock_data["conversation_data"]
 
     # Test with different data (simulating direct list input)
@@ -218,36 +218,43 @@ def test_chat_completion_formatter_with_arbitrary_columns():
         {"role": "user", "content": "What is machine learning?"},
         {"role": "assistant", "content": "Machine learning is a subset of AI..."},
     ]
-    columns_2 = ["dialogue"]
-    result_2 = DatasetFmt.chat_completion(columns_2, direct_list)
 
-    # Verify the formatter returns the list directly
+    # Create a dictionary with the direct list as a column value
+    mock_data_2 = {"dialogue": direct_list}
+    columns_2 = ["dialogue"]
+    result_2 = DatasetFmt.chat_completion(columns_2, mock_data_2)
+
+    # Verify the formatter extracts the list from the specified column
     assert result_2 == direct_list
     assert len(result_2) == 3
     assert result_2[0]["role"] == "system"
     assert result_2[0]["content"] == "You are a helpful assistant."
 
-    print("✅ Chat completion formatter correctly passthrough messages data")
+    print(
+        "✅ Chat completion formatter correctly extracts messages from specified column"
+    )
 
 
 def test_chat_completion_formatter_field_validation():
     """Test that chat completion formatter works with valid data formats."""
     print("\n=== Testing Chat Completion Formatter Field Validation ===")
 
-    # Test with missing key but valid direct list input
+    # Test with missing column
     try:
         DatasetFmt.chat_completion(["messages"], {"other_field": "value"})
-        # No error because we're passing the whole dict, not trying to extract from it
-        print("✅ Chat completion correctly handles dict with missing key")
+        print("❌ Chat completion should raise KeyError for missing column")
+    except KeyError:
+        print("✅ Chat completion correctly raises KeyError for missing column")
     except Exception as e:
-        print(f"⚠️ Unexpected error with dict input: {e}")
+        print(f"⚠️ Chat completion unexpected error for missing column: {e}")
 
-    # Test with direct list input (the intended use case)
+    # Test with direct list input wrapped in a dictionary (the intended use case)
     direct_list = [
         {"role": "user", "content": "Hello"},
         {"role": "assistant", "content": "Hi there"},
     ]
-    result = DatasetFmt.chat_completion(["messages"], direct_list)
+    mock_list_data = {"messages": direct_list}
+    result = DatasetFmt.chat_completion(["messages"], mock_list_data)
     assert len(result) == 2
     assert result[0]["role"] == "user"
     assert result[0]["content"] == "Hello"
@@ -263,10 +270,16 @@ def test_chat_completion_formatter_field_validation():
             ]
         }
     }
-    # This simulates passing the extracted column content directly
-    nested_result = DatasetFmt.chat_completion(
-        ["messages_col"], nested_data["messages_col"]["messages"]
-    )
+    # This simulates how the formatter is called with the full row
+    nested_result = DatasetFmt.chat_completion(["messages_col"], nested_data)
+
+    # Verify we get the nested messages correctly
+    expected = nested_data["messages_col"]["messages"]
+    # For debug purposes if assertion fails
+    print(f"DEBUG: nested result = {nested_result}")
+    print(f"DEBUG: expected = {expected}")
+    assert nested_result == expected
+    print("✅ Chat completion correctly extracts from nested dictionary structure")
     assert len(nested_result) == 2
     assert nested_result[0]["role"] == "user"
     assert nested_result[0]["content"] == "Hello"
@@ -275,24 +288,26 @@ def test_chat_completion_formatter_field_validation():
 
 
 def test_chat_completion_formatter_direct_list():
-    """Test that chat completion formatter works with direct list input (for neuralmagic/calibration)."""
-    print("\n=== Testing Chat Completion Formatter with Direct List Input ===")
+    """Test that chat completion formatter extracts messages from the specified column."""
+    print("\n=== Testing Chat Completion Formatter Column Extraction ===")
 
-    # Mock data that is a direct list (format used by neuralmagic/calibration)
-    direct_list = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "What is machine learning?"},
-        {"role": "assistant", "content": "Machine learning is a subset of AI..."},
-    ]
+    # Mock data that is a dictionary with a direct list (the actual usage pattern)
+    mock_data = {
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "What is machine learning?"},
+            {"role": "assistant", "content": "Machine learning is a subset of AI..."},
+        ]
+    }
 
-    # Test with any column name (should be ignored for direct list)
-    columns = ["any_column_name"]
-    result = DatasetFmt.chat_completion(columns, direct_list)
+    # Test with any column name
+    columns = ["messages"]
+    result = DatasetFmt.chat_completion(columns, mock_data)
 
-    # Verify the formatter returns the list directly
-    assert result == direct_list
+    # Verify the formatter extracts the list from the specified column
+    assert result == mock_data["messages"]
 
-    print("✅ Chat completion formatter correctly handles direct list input")
+    print("✅ Chat completion formatter correctly extracts from specified column")
 
 
 def test_raw_text_formatter_with_arbitrary_columns():
