@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 # Add the source directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from quantizers.calibration_sets import (
     CalibrationSet,
@@ -176,12 +176,9 @@ def test_chat_completion_format_loading():
     # Verify the data format
     for i, row in enumerate(raw_dataset):
         assert "formatted" in row, f"Row {i} missing formatted field"
-        response = row["formatted"]
-        # For chat completion format, response should be a dict with a "messages" key
-        assert isinstance(response, dict), f"Row {i} response should be a dict"
-        assert "messages" in response, f"Row {i} response should have 'messages' key"
-        messages = response["messages"]
-        assert isinstance(messages, list), f"Row {i} messages should be a list"
+        # For chat_completion format, the formatter returns the list of messages directly
+        messages = row["formatted"]
+        assert isinstance(messages, list), f"Row {i} messages not a list"
         assert (
             len(messages) >= 2
         ), f"Row {i} should have at least user and assistant messages"
@@ -445,12 +442,9 @@ def test_diverse_column_names_usage():
         # Verify that the specific content from the selected column is present
         sample = raw_dataset[0]["formatted"]
 
-        # Chat completion passthroughs the entire column data, so we need to extract the messages
-        # The column name varies by dataset: "messages", "conversations", or "musings"
-        messages_key = columns[0]  # Use the specified column name
-        content_str = " ".join(
-            [msg.get("content", "") for msg in sample.get(messages_key, [])]
-        )
+        # Chat completion now properly returns a list of messages
+        # So we can access them directly
+        content_str = " ".join([msg.get("content", "") for msg in sample])
 
         if dataset_name == "ds_messages":
             assert "capital of France" in content_str, "Using wrong column"
@@ -581,24 +575,6 @@ if __name__ == "__main__":
         test_chat_completion_format_loading()
         test_raw_text_format_loading()
         test_multiple_dataset_loading()
-    except Exception as e:
-        print(f"\n❌ Test failed: {e}")
-        import traceback
-
-        traceback.print_exc()
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    print("🔍 Testing dataset loading functionality...")
-
-    try:
-        test_sharegpt_format_loading()
-        test_prompt_answer_format_loading()
-        test_chat_completion_format_loading()
-        test_raw_text_format_loading()
-        test_multiple_dataset_loading()
-
         test_diverse_column_names_usage()
 
         print("\n🎉 All dataset loading tests passed!")

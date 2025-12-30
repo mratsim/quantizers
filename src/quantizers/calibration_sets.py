@@ -404,7 +404,7 @@ class CalibrationSet:
             elif isinstance(ds.num_samples, int) and ds.num_samples > 0:
                 total_samples += ds.num_samples
             else:
-                raise FileNotFoundError(
+                raise ValueError(
                     f"Invalid sample count in dataset {ds.dataset}: {ds.num_samples}"
                 )
         if total_samples_str == "":
@@ -461,9 +461,16 @@ class CalibrationSet:
             # Apply formatter function
             formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
 
-            # Apply formatting directly
+            # Apply formatter function
+            formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
+
+            # Apply formatting directly using named function to avoid lambda variable capture issues
+            def apply_formatter(row):
+                result = formatter_func(ds_config.columns, row)
+                return {"formatted": result}
+
             dataset = dataset.map(
-                lambda row: {"formatted": formatter_func(ds_config.columns, row)},
+                apply_formatter,
                 remove_columns=dataset.column_names,
             )
 

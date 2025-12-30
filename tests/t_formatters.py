@@ -535,7 +535,8 @@ def test_calibration_set_with_dataset_columns():
             "\n✅ CalibrationSet correctly processes data with correct dataset column names"
         )
     except Exception as e:
-        print(f"\n⚠️  CalibrationSet test with dataset columns encountered: {e}")
+        print(f"\n❌ CalibrationSet test with dataset columns failed: {e}")
+        raise  # Re-raise to fail the test
 
 
 def test_formatter_with_diverse_column_names():

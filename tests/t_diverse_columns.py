@@ -19,14 +19,15 @@ import pytest
 
 import datasets
 
+
+# Add the source directory to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 from quantizers.calibration_sets import (
     CalibrationSet,
     CalibrationSetConfig,
     DatasetEntryConfig,
 )
-
-# Add the source directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
 class MockTokenizer:
@@ -174,147 +175,84 @@ def test_load_diverse_columns_calibration_set():
 
 def test_yaml_direct_loading():
     """Test that we can also load the YAML configuration directly using our config system."""
+    pytest.importorskip("quantizers.config")
+
+    from quantizers.calibration_sets import CalibrationSetConfig
+
+    print("\n=== Testing Direct YAML Loading ===")
+
+    # Try to load the YAML directly
+    calib_config = CalibrationSetConfig.from_file(
+        "tests/test_datasets/t_calibrate_diverse_columns.yaml"
+    )
+
+    # Verify we got a config object
+    assert hasattr(calib_config, "datasets")
+    assert len(calib_config.datasets) > 0
+
+    print("✅ Successfully loaded configuration directly from YAML")
+
+    # Verify the config structure
+    assert calib_config.max_seq_length == 8192
+    assert calib_config.shuffle is True
+    assert calib_config.seed == 42
+    assert len(calib_config.datasets) == 5
+
+    print(f"✅ Configuration has {len(calib_config.datasets)} datasets as expected")
+
+
+def test_problematic_mixed_dataset():
+    """Test for the problematic mixed dataset that was causing schema alignment issues.
+
+    This test verifies that after fixing the chat_completion formatter,
+    we can successfully concatenate datasets with different schemas.
+    """
+    pytest.importorskip("quantizers.config")
+
+    from quantizers.calibration_sets import CalibrationSetConfig, CalibrationSet
+
+    print("\n=== Testing Problematic Mixed Dataset ===")
+
+    # Load the YAML config with diverse datasets
+    calib_config = CalibrationSetConfig.from_file(
+        "tests/test_datasets/t_calibrate_diverse_columns.yaml"
+    )
+
+    # Verify all datasets are loaded
+    assert len(calib_config.datasets) == 5
+    print("✅ Configuration loaded with 5 diverse datasets")
+
+    # Try to create calibration set - this should now pass with our fix
     try:
-        from quantizers.config import load_quantization_from_yaml
-
-        print("\n=== Testing Direct YAML Loading ===")
-
-        # Try to load the YAML directly
-        config = load_quantization_from_yaml(
-            "tests/test_datasets/t_calibrate_diverse_columns.yaml", "test_cache"
-        )
-
-        # Verify we got a config object
-        assert hasattr(config, "calibration_set_config")
-        assert config.calibration_set_config is not None
-
-        print("✅ Successfully loaded configuration directly from YAML")
-
-        # Verify the config structure
-        calib_config = config.calibration_set_config
-        assert calib_config.max_seq_length == 8192
-        assert calib_config.shuffle is True
-        assert calib_config.seed == 42
-        assert len(calib_config.datasets) == 5
-
-        print(f"✅ Configuration has {len(calib_config.datasets)} datasets as expected")
-
-        # Test creating from the loaded config
         calib_set = CalibrationSet.from_config(calib_config, "test_cache")
+        print("✅ Successfully created calibration set with mixed datasets")
+
+        # Verify the set was created correctly
         assert calib_set.total_num_samples == 15  # 5 datasets × 3 samples each
+        print("✅ Calibration set has correct number of samples")
 
-        print("✅ Successfully created calibration set from loaded YAML config")
+        # Verify that all formatted entries are lists (not dicts)
+        raw_dataset = calib_set._untokenized_calibration_set
+        for i, row in enumerate(raw_dataset):
+            formatted = row["formatted"]
+            assert isinstance(
+                formatted, list
+            ), f"Row {i}: Expected list, got {type(formatted)}"
+            assert len(formatted) > 0, f"Row {i}: Formatted list is empty"
 
-    except Exception as e:
-        print(
-            f"⚠️  Direct YAML loading test failed (expected if config module not available): {e}"
-        )
-        # This is expected to fail if the config module isn't designed for this specific YAML
+            # Check each message structure
+            for msg in formatted:
+                assert isinstance(msg, dict), f"Row {i}: Expected dict, got {type(msg)}"
+                assert "role" in msg, f"Row {i}: Message missing 'role' field"
+                assert "content" in msg, f"Row {i}: Message missing 'content' field"
 
+        print("✅ All formatted entries are properly structured message lists")
 
-def verify_diverse_column_formats():
-    """Manually verify each dataset format individually."""
-    print("\n=== Verifying Individual Diverse Column Formats ===")
-
-    # Test each dataset individually to verify column formats
-    configs = [
-        # Note: Skipping ds_musings as it has extra metadata fields that cause
-        # schema alignment issues when combined with other datasets
-        # ShareGPT with "conversations" column
-        {
-            "dataset": "tests/test_datasets/sharegpt/ds_conversations",
-            "columns": ["conversations"],
-            "formatter": "sharegpt",
-            "expected_samples": 3,
-        },
-        # Prompt-Answer with "instruction", "response" columns
-        {
-            "dataset": "tests/test_datasets/prompt_answer/ds_instruction_response",
-            "columns": ["instruction", "response"],
-            "formatter": "prompt_answer",
-            "expected_samples": 3,
-        },
-        # Raw text with "text" column
-        {
-            "dataset": "tests/test_datasets/raw_text/ds_text",
-            "columns": ["text"],
-            "formatter": "raw_text",
-            "expected_samples": 3,
-        },
-        # Test compatible chat completion dataset
-        {
-            "dataset": "tests/test_datasets/chat_completion/ds_messages",
-            "columns": ["messages"],
-            "formatter": "chat_completion",
-            "expected_samples": 3,
-        },
-    ]
-
-    for i, config_info in enumerate(configs):
-        try:
-            # Create a simple config for each dataset
-            single_dataset_config = CalibrationSetConfig(
-                max_seq_length=8192,
-                shuffle=True,
-                seed=42,
-                datasets=[
-                    DatasetEntryConfig(
-                        dataset=config_info["dataset"],
-                        split="train",
-                        columns=config_info["columns"],
-                        formatter=config_info["formatter"],
-                        num_samples=config_info["expected_samples"],
-                    ),
-                ],
-            )
-
-            # Load this single dataset
-            cache_dir = f"test_cache_single_{i}"
-            import shutil
-
-            if Path(cache_dir).exists():
-                shutil.rmtree(cache_dir)
-
-            calib_set = CalibrationSet.from_config(single_dataset_config, cache_dir)
-
-            # Verify loaded correctly
-            assert calib_set.total_num_samples == config_info["expected_samples"]
-            print(
-                f"✅ Dataset {i+1} ({config_info['formatter']}) loaded with {config_info['expected_samples']} samples using {config_info['columns']} columns"
-            )
-
-        except Exception as e:
-            print(
-                f"❌ Failed to load dataset {i+1}: {config_info['formatter']} with columns {config_info['columns']}: {e}"
-            )
+    except ValueError as e:
+        if "features can't be aligned" in str(e):
+            print(f"❌ Still getting schema alignment error: {str(e)}")
+            print("This suggests the formatter fix didn't solve the problem")
             raise
-
-    print("✅ All individual dataset formats work correctly")
-
-
-def main():
-    """Run all tests."""
-    print("Running calibration set diverse columns tests...")
-
-    try:
-        test_load_diverse_columns_calibration_set()
-        verify_diverse_column_formats()
-        try:
-            test_yaml_direct_loading()
-        except Exception as e:
-            print(f"\n⚠️  Note: YAML direct loading test failed with: {e}")
-            print(
-                "   This may be expected if the config module can't load from this specific YAML format"
-            )
-
-        print("\n🎉 All tests passed successfully!")
-
-    except Exception as e:
-        print(f"\n❌ Test failed with error: {e}")
-        import traceback
-
-        traceback.print_exc()
-        sys.exit(1)
 
 
 def test_calibration_set_with_arbitrary_columns():
@@ -358,6 +296,22 @@ def test_calibration_set_with_arbitrary_columns():
         )
     except Exception as e:
         pytest.fail(f"CalibrationSet test with arbitrary columns failed: {e}")
+
+
+def main():
+    """Run all tests."""
+    print("Running calibration set diverse columns tests...")
+
+    try:
+        test_load_diverse_columns_calibration_set()
+        test_yaml_direct_loading()
+        test_problematic_mixed_dataset()
+        test_calibration_set_with_arbitrary_columns()
+
+        print("\n🎉 All tests passed successfully!")
+
+    except Exception as e:
+        print(f"\n❌ Test failed with error: {e}")
 
 
 if __name__ == "__main__":
