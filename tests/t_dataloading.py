@@ -34,12 +34,7 @@ def test_sharegpt_format_loading():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent
-                    / "test_datasets"
-                    / "sharegpt"
-                    / "ds_conversations"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "sharegpt" / "ds_conversations"),
                 split="train",
                 columns=["conversations"],
                 formatter="sharegpt",
@@ -66,9 +61,7 @@ def test_sharegpt_format_loading():
         assert "formatted" in row, f"Row {i} missing formatted field"
         messages = row["formatted"]
         assert isinstance(messages, list), f"Row {i} messages not a list"
-        assert (
-            len(messages) >= 2
-        ), f"Row {i} should have at least user and assistant messages"
+        assert len(messages) >= 2, f"Row {i} should have at least user and assistant messages"
 
         # Check for user and assistant messages
         has_user = any(msg.get("role") == "user" for msg in messages)
@@ -90,12 +83,7 @@ def test_prompt_answer_format_loading():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent
-                    / "test_datasets"
-                    / "prompt_answer"
-                    / "ds_input_output"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "prompt_answer" / "ds_input_output"),
                 split="train",
                 columns=["input", "output"],
                 formatter="prompt_answer",
@@ -122,9 +110,7 @@ def test_prompt_answer_format_loading():
         assert "formatted" in row, f"Row {i} missing formatted field"
         messages = row["formatted"]
         assert isinstance(messages, list), f"Row {i} messages not a list"
-        assert (
-            len(messages) >= 2
-        ), f"Row {i} messages should have at least 2 elements (system and user)"
+        assert len(messages) >= 2, f"Row {i} messages should have at least 2 elements (system and user)"
 
         # Check for user and assistant messages
         has_user = any(msg.get("role") == "user" for msg in messages)
@@ -146,12 +132,7 @@ def test_chat_completion_format_loading():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent
-                    / "test_datasets"
-                    / "chat_completion"
-                    / "ds_messages"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "chat_completion" / "ds_messages"),
                 split="train",
                 columns=["messages"],
                 formatter="chat_completion",
@@ -179,9 +160,7 @@ def test_chat_completion_format_loading():
         # For chat_completion format, the formatter returns the list of messages directly
         messages = row["formatted"]
         assert isinstance(messages, list), f"Row {i} messages not a list"
-        assert (
-            len(messages) >= 2
-        ), f"Row {i} should have at least user and assistant messages"
+        assert len(messages) >= 2, f"Row {i} should have at least user and assistant messages"
 
         # Check for user and assistant messages
         has_user = any(msg.get("role") == "user" for msg in messages)
@@ -203,9 +182,7 @@ def test_raw_text_format_loading():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"),
                 split="train",
                 columns=["text"],  # Single column for raw text
                 formatter="raw_text",
@@ -252,33 +229,21 @@ def test_multiple_dataset_loading():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent
-                    / "test_datasets"
-                    / "sharegpt"
-                    / "ds_conversations"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "sharegpt" / "ds_conversations"),
                 split="train",
                 columns=["conversations"],
                 formatter="sharegpt",
                 num_samples=2,
             ),
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent
-                    / "test_datasets"
-                    / "prompt_answer"
-                    / "ds_input_output"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "prompt_answer" / "ds_input_output"),
                 split="train",
                 columns=["input", "output"],
                 formatter="prompt_answer",
                 num_samples=2,
             ),
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"),
                 split="train",
                 columns=["text"],
                 formatter="raw_text",
@@ -298,9 +263,7 @@ def test_multiple_dataset_loading():
     # Check that the data was loaded correctly
     # Just verify the untokenized data has the expected structure
     raw_dataset = calib_set._untokenized_calibration_set
-    assert (
-        len(raw_dataset) == 5
-    )  # 2 from sharegpt + 2 from prompt-answer + 1 from raw_text
+    assert len(raw_dataset) == 5  # 2 from sharegpt + 2 from prompt-answer + 1 from raw_text
 
     # Verify the data format has been properly transformed by the formatter
     for i, row in enumerate(raw_dataset):
@@ -310,13 +273,9 @@ def test_multiple_dataset_loading():
         # Different formatters produce different message lengths
         # Raw text formatter produces 1 message, others produce 2+
         if i >= 4:  # This is the raw text formatter data
-            assert (
-                len(messages) >= 1
-            ), f"Row {i} messages should have at least 1 element (raw text)"
+            assert len(messages) >= 1, f"Row {i} messages should have at least 1 element (raw text)"
         else:
-            assert (
-                len(messages) >= 2
-            ), f"Row {i} messages should have at least 2 elements"
+            assert len(messages) >= 2, f"Row {i} messages should have at least 2 elements"
 
     print("✅ Multiple dataset loading test passed")
 
@@ -340,12 +299,7 @@ def test_diverse_column_names_usage():
             seed=42,
             datasets=[
                 DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent
-                        / "test_datasets"
-                        / "sharegpt"
-                        / dataset_name
-                    ),
+                    dataset=str(Path(__file__).parent / "test_datasets" / "sharegpt" / dataset_name),
                     split="train",
                     columns=columns,
                     formatter="sharegpt",
@@ -364,9 +318,7 @@ def test_diverse_column_names_usage():
             content_str = " ".join([msg.get("content", "") for msg in sample])
         elif isinstance(sample, dict):
             # Chat completion returns a dict with messages
-            content_str = " ".join(
-                [msg.get("content", "") for msg in sample.get("messages", [])]
-            )
+            content_str = " ".join([msg.get("content", "") for msg in sample.get("messages", [])])
         else:
             content_str = str(sample)
 
@@ -387,16 +339,9 @@ def test_diverse_column_names_usage():
             seed=42,
             datasets=[
                 DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent
-                        / "test_datasets"
-                        / "sharegpt"
-                        / "ds_messages"
-                    ),
+                    dataset=str(Path(__file__).parent / "test_datasets" / "sharegpt" / "ds_messages"),
                     split="train",
-                    columns=[
-                        "nonexistent_column"
-                    ],  # This column doesn't exist in the dataset
+                    columns=["nonexistent_column"],  # This column doesn't exist in the dataset
                     formatter="sharegpt",
                     num_samples=2,
                 )
@@ -423,12 +368,7 @@ def test_diverse_column_names_usage():
             seed=42,
             datasets=[
                 DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent
-                        / "test_datasets"
-                        / "chat_completion"
-                        / dataset_name
-                    ),
+                    dataset=str(Path(__file__).parent / "test_datasets" / "chat_completion" / dataset_name),
                     split="train",
                     columns=columns,
                     formatter="chat_completion",
@@ -453,9 +393,7 @@ def test_diverse_column_names_usage():
         elif dataset_name == "ds_musings":
             assert "philosophical implications" in content_str, "Using wrong column"
 
-        print(
-            f"✅ Chat Completion correctly used '{columns[0]}' column from {dataset_name}"
-        )
+        print(f"✅ Chat Completion correctly used '{columns[0]}' column from {dataset_name}")
 
     # Test for Prompt-Answer format with different column names
     print("\nTesting Prompt-Answer format with different column names:")
@@ -473,12 +411,7 @@ def test_diverse_column_names_usage():
             seed=42,
             datasets=[
                 DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent
-                        / "test_datasets"
-                        / "prompt_answer"
-                        / dataset_name
-                    ),
+                    dataset=str(Path(__file__).parent / "test_datasets" / "prompt_answer" / dataset_name),
                     split="train",
                     columns=columns,
                     formatter="prompt_answer",
@@ -502,13 +435,9 @@ def test_diverse_column_names_usage():
         elif dataset_name == "ds_question_answer":
             assert "capital city of Australia" in content_str, "Using wrong column"
         elif dataset_name == "ds_instruction_response":
-            assert (
-                "Python function that calculates the factorial" in content_str
-            ), "Using wrong column"
+            assert "Python function that calculates the factorial" in content_str, "Using wrong column"
 
-        print(
-            f"✅ Prompt-Answer correctly used '{columns[0]}' column from {dataset_name}"
-        )
+        print(f"✅ Prompt-Answer correctly used '{columns[0]}' column from {dataset_name}")
 
     # Test for Raw Text format with different column names
     print("\nTesting Raw Text format with different column names:")
@@ -524,12 +453,7 @@ def test_diverse_column_names_usage():
             seed=42,
             datasets=[
                 DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent
-                        / "test_datasets"
-                        / "raw_text"
-                        / dataset_name
-                    ),
+                    dataset=str(Path(__file__).parent / "test_datasets" / "raw_text" / dataset_name),
                     split="train",
                     columns=columns,
                     formatter="raw_text",
@@ -547,19 +471,13 @@ def test_diverse_column_names_usage():
         # Raw text returns a single message list with role/content structure
         assert isinstance(sample, list), "Raw text should return a list"
         assert len(sample) == 1, "Raw text should return a single message"
-        assert (
-            sample[0].get("role") == "assistant"
-        ), "Raw text should return an assistant message"
+        assert sample[0].get("role") == "assistant", "Raw text should return an assistant message"
         content_str = sample[0]["content"]
 
         if dataset_name == "ds_text":
-            assert (
-                "history of artificial intelligence" in content_str
-            ), "Using wrong column"
+            assert "history of artificial intelligence" in content_str, "Using wrong column"
         elif dataset_name == "ds_message":
-            assert (
-                "learning about artificial intelligence" in content_str
-            ), "Using wrong column"
+            assert "learning about artificial intelligence" in content_str, "Using wrong column"
 
         print(f"✅ Raw Text correctly used '{columns[0]}' column from {dataset_name}")
 

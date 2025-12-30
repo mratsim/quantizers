@@ -16,16 +16,14 @@ from typing import Optional
 
 import torch
 from llmcompressor import oneshot
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from quantizers.calibration_sets import CalibrationSet
 from quantizers.config import load_quantization_config
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Setup environment variables to avoid warnings
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
-os.environ.setdefault(
-    "PYTORCH_ALLOC_CONF", "expandable_segments:True,max_split_size_mb:512"
-)
+os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True,max_split_size_mb:512")
 
 
 def setup_logging(log_file: Optional[str] = None, level: int = logging.INFO):
@@ -43,9 +41,7 @@ def setup_logging(log_file: Optional[str] = None, level: int = logging.INFO):
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Calibration-based quantization entry point"
-    )
+    parser = argparse.ArgumentParser(description="Calibration-based quantization entry point")
     parser.add_argument(
         "--config",
         type=str,
@@ -119,9 +115,7 @@ def main():
         output_dir = f"outputs/{model_name}-{recipe_name}"
 
     # Load model and tokenizer
-    model, tokenizer = load_model_and_tokenizer(
-        config.model.name, config.model.revision
-    )
+    model, tokenizer = load_model_and_tokenizer(config.model.name, config.model.revision)
 
     # Load calibration set
     logging.info("Loading calibration set")
@@ -129,12 +123,8 @@ def main():
     # First try to load from cache
     start_time = time.time()
     # Check if calibration set is cached
-    if CalibrationSet.is_cached(
-        config.calibration_set_config, cache_dir=args.cache_dir
-    ):
-        calib_set = CalibrationSet.from_cache(
-            config.calibration_set_config, cache_dir=args.cache_dir
-        )
+    if CalibrationSet.is_cached(config.calibration_set_config, cache_dir=args.cache_dir):
+        calib_set = CalibrationSet.from_cache(config.calibration_set_config, cache_dir=args.cache_dir)
         cache_time = time.time() - start_time
         logging.info(f"Loaded calibration set from cache in {cache_time:.2f} seconds")
     else:

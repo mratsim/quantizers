@@ -37,9 +37,7 @@ def main():
         )
 
         # Create a simple CalibrationSetConfig
-        config = CalibrationSetConfig(
-            max_seq_length=4096, shuffle=True, seed=42, datasets=[dataset_entry]
-        )
+        config = CalibrationSetConfig(max_seq_length=4096, shuffle=True, seed=42, datasets=[dataset_entry])
 
         # Test cache key generation
         cache_key = CalibrationSet.compute_cache_key(config)
@@ -64,9 +62,7 @@ def main():
         )
 
         # Create a CalibrationSetConfig with "all" value
-        config_all = CalibrationSetConfig(
-            max_seq_length=4096, shuffle=True, seed=42, datasets=[dataset_entry_all]
-        )
+        config_all = CalibrationSetConfig(max_seq_length=4096, shuffle=True, seed=42, datasets=[dataset_entry_all])
 
         # Test cache key generation with "all" value
         cache_key_all = CalibrationSet.compute_cache_key(config_all)
@@ -104,13 +100,9 @@ def main():
 
         # Verify the cache key contains "length_TBD" as expected
         if "length_TBD" in cache_key_mixed:
-            print(
-                "✅ Cache key correctly contains 'length_TBD' when any dataset has 'all' value"
-            )
+            print("✅ Cache key correctly contains 'length_TBD' when any dataset has 'all' value")
         else:
-            print(
-                "❌ Cache key should contain 'length_TBD' when any dataset has 'all' value"
-            )
+            print("❌ Cache key should contain 'length_TBD' when any dataset has 'all' value")
 
         # Test Case 4: Formatter column extraction
         print("\n--- Test Case 4: Chat completion formatter ---")
@@ -131,13 +123,9 @@ def main():
 
         # Verify the formatter extracted the messages correctly
         if formatted_messages == test_data["messages"]:
-            print(
-                "✅ Chat completion formatter correctly extracted messages from specified column"
-            )
+            print("✅ Chat completion formatter correctly extracted messages from specified column")
         else:
-            print(
-                "❌ Chat completion formatter should extract messages from specified column"
-            )
+            print("❌ Chat completion formatter should extract messages from specified column")
 
         print("\n✅ All tests passed successfully!")
         return True

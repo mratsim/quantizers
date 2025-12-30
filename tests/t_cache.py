@@ -107,9 +107,7 @@ def test_cache_save_and_load():
         cache_set = CalibrationSet.from_config(config=config, cache_dir=temp_dir)
 
         # Create Dataset object from test data with proper formatting
-        test_dataset = datasets.Dataset.from_dict({"text": test_data}).map(
-            lambda row: {"formatted": row["text"]}
-        )
+        test_dataset = datasets.Dataset.from_dict({"text": test_data}).map(lambda row: {"formatted": row["text"]})
 
         # Set the dataset and save to cache
         cache_set._untokenized_calibration_set = test_dataset
@@ -187,9 +185,7 @@ def test_cache_from_config_and_cache():
         assert cache_set._untokenized_calibration_set is not None
         assert cache_set.total_num_samples == 3  # We requested 3 samples
 
-        print(
-            f"✅ Created calibration set with {cache_set.total_num_samples} total samples"
-        )
+        print(f"✅ Created calibration set with {cache_set.total_num_samples} total samples")
 
         # Manually save to cache to ensure cache file is created
         cache_set.save_to_cache()
@@ -410,12 +406,8 @@ def test_cache_key():
     key3 = CalibrationSet.compute_cache_key(config3)
 
     # Verify keys are different for different configurations
-    assert (
-        key1 != key2
-    ), f"Cache keys should be different for different max_seq_length, got {key1} == {key2}"
-    assert (
-        key1 != key3
-    ), f"Cache keys should be different for different formatters, got {key1} == {key3}"
+    assert key1 != key2, f"Cache keys should be different for different max_seq_length, got {key1} == {key2}"
+    assert key1 != key3, f"Cache keys should be different for different formatters, got {key1} == {key3}"
 
     print("✅ Cache keys are correctly different for different configurations")
 

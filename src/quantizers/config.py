@@ -41,9 +41,7 @@ class QuantizationConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "QuantizationConfig":
-        return cls(
-            recipe=data.get("recipe", ""), calibration_set=data.get("calibration_set")
-        )
+        return cls(recipe=data.get("recipe", ""), calibration_set=data.get("calibration_set"))
 
     def validate(self) -> None:
         if not self.recipe:
@@ -59,9 +57,7 @@ class QuantizationRunConfig:
     calibration_set_config: Optional[CalibrationSetConfig] = None
 
     @classmethod
-    def from_dict(
-        cls, data: Dict[str, Any], config_path: Optional[str] = None
-    ) -> "QuantizationRunConfig":
+    def from_dict(cls, data: Dict[str, Any], config_path: Optional[str] = None) -> "QuantizationRunConfig":
         model = ModelConfig.from_dict(data.get("model", {}))
         quant_data = data.get("quantization", {})
         quantization = QuantizationConfig.from_dict(quant_data)
@@ -81,9 +77,7 @@ class QuantizationRunConfig:
                 configs_prefix = "configs/"
                 if calib_set_path.startswith(configs_prefix):
                     # Skip the "configs/" prefix to avoid duplication
-                    relative_path = calib_set_path[
-                        len(configs_prefix) :
-                    ]  # Remove prefix using length
+                    relative_path = calib_set_path[len(configs_prefix) :]  # Remove prefix using length
                     calib_set_path = str(parent_dir / relative_path)
                 else:
                     calib_set_path = str(parent_dir / calib_set_path)

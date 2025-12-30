@@ -74,9 +74,7 @@ def test_creating_calibration_set():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"),
                 split="train",
                 columns=["text"],
                 formatter="raw_text",
@@ -151,9 +149,7 @@ def test_compute_cache_key():
     )
 
     # Test 1: Identical configs should produce the same cache key
-    assert CalibrationSet.compute_cache_key(config) == CalibrationSet.compute_cache_key(
-        config2
-    )
+    assert CalibrationSet.compute_cache_key(config) == CalibrationSet.compute_cache_key(config2)
 
     # Test 2: Different configs should produce different cache keys
     config3 = CalibrationSetConfig(
@@ -175,12 +171,8 @@ def test_compute_cache_key():
     key2 = CalibrationSet.compute_cache_key(config2)
     key3 = CalibrationSet.compute_cache_key(config3)
 
-    assert (
-        key1 == key2
-    ), f"Identical configs should produce same cache key, but {key1} != {key2}"
-    assert (
-        key1 != key3
-    ), f"Different configs should produce different cache keys, but {key1} == {key3}"
+    assert key1 == key2, f"Identical configs should produce same cache key, but {key1} != {key2}"
+    assert key1 != key3, f"Different configs should produce different cache keys, but {key1} == {key3}"
 
     print("✅ Cache key generation test passed")
 
@@ -196,12 +188,7 @@ def test_save_and_load():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent
-                    / "test_datasets"
-                    / "sharegpt"
-                    / "ds_conversations"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "sharegpt" / "ds_conversations"),
                 split="train",
                 columns=["conversations"],
                 formatter="sharegpt",
@@ -254,15 +241,11 @@ def test_save_and_load():
                 "apply_chat_template": lambda self, messages, tokenize=False: " ".join(
                     [msg.get("content", "") for msg in messages]
                 ).strip(),
-                "__call__": lambda self, text, **kwargs: (
-                    {"input_ids": [1, 2, 3]} if text else {"input_ids": []}
-                ),
+                "__call__": lambda self, text, **kwargs: ({"input_ids": [1, 2, 3]} if text else {"input_ids": []}),
             },
         )()
 
-        dataset = loaded_calib_set.get_tokenized(
-            mock_tokenizer
-        )  # Use tokenizer for cached data
+        dataset = loaded_calib_set.get_tokenized(mock_tokenizer)  # Use tokenizer for cached data
         assert dataset is not None
         assert len(dataset) == 3
         assert dataset[0]["input_ids"] == [1, 2, 3]
@@ -281,12 +264,7 @@ def test_create_from_config():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent
-                    / "test_datasets"
-                    / "chat_completion"
-                    / "ds_messages"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "chat_completion" / "ds_messages"),
                 split="train",
                 columns=["messages"],
                 formatter="chat_completion",
@@ -341,9 +319,7 @@ def test_dataset_entry_config_resolve_num_samples():
     print("\n=== Testing DatasetEntryConfig Resolve Num Samples ===")
 
     # Test with actual dataset from test_datasets
-    test_dataset_path = str(
-        Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
-    )
+    test_dataset_path = str(Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text")
 
     # Load the actual test dataset to get its size
     dataset = datasets.load_dataset(test_dataset_path, split="train")
@@ -541,9 +517,7 @@ def test_edge_cases():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"),
                 split="train",
                 columns=["text"],
                 formatter="raw_text",
@@ -559,9 +533,7 @@ def test_edge_cases():
     # Test with very large num_samples
     try:
         entry = DatasetEntryConfig(
-            dataset=str(
-                Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
-            ),
+            dataset=str(Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"),
             split="train",
             columns=["text"],
             formatter="raw_text",
@@ -570,17 +542,13 @@ def test_edge_cases():
         config.datasets = [entry]
         calib_set = CalibrationSet.from_config(config=config)
         # If we get here without an exception, the large number was handled gracefully
-        print(
-            f"✅ Very large num_samples ({entry.num_samples}) handled gracefully by using all available samples"
-        )
+        print(f"✅ Very large num_samples ({entry.num_samples}) handled gracefully by using all available samples")
     except Exception as e:
         print(f"ℹ️  Large num_samples test resulted in expected behavior: {e}")
 
     # Test with empty datasets - validation should happen at entry points
     try:
-        empty_config = CalibrationSetConfig(
-            max_seq_length=4096, shuffle=False, seed=42, datasets=[]
-        )
+        empty_config = CalibrationSetConfig(max_seq_length=4096, shuffle=False, seed=42, datasets=[])
         calib_set = CalibrationSet.from_config(config=empty_config, cache_dir="./cache")
         assert False, "Expected ValueError for empty datasets"
     except ValueError as e:

@@ -41,10 +41,7 @@ class DatasetFmt:
         """
         # Enforce correct number of columns
         if len(columns) != 1:
-            raise ValueError(
-                f"ShareGPT format requires exactly 1 column, "
-                f"got {len(columns)}: {columns}"
-            )
+            raise ValueError(f"ShareGPT format requires exactly 1 column, got {len(columns)}: {columns}")
 
         # Extract conversation list from the specified column - mandatory column
         conversations = data[columns[0]]
@@ -54,14 +51,8 @@ class DatasetFmt:
 
         messages = []
         for entry_idx, entry in enumerate(conversations):
-            if (
-                not isinstance(entry, dict)
-                or "from" not in entry
-                or "value" not in entry
-            ):
-                logger.warning(
-                    f"Skipping invalid conversation entry {entry_idx}: {entry}"
-                )
+            if not isinstance(entry, dict) or "from" not in entry or "value" not in entry:
+                logger.warning(f"Skipping invalid conversation entry {entry_idx}: {entry}")
                 continue
 
             role = role_mapping.get(entry.get("from", ""), "user")
@@ -85,10 +76,7 @@ class DatasetFmt:
         """
         # Enforce correct number of columns
         if len(columns) != 2:
-            raise ValueError(
-                f"Prompt-answer format requires exactly 2 columns, "
-                f"got {len(columns)}: {columns}"
-            )
+            raise ValueError(f"Prompt-answer format requires exactly 2 columns, got {len(columns)}: {columns}")
 
         # Extract prompt and answer using arbitrary column names - mandatory columns
         prompt = data[columns[0]]
@@ -107,9 +95,7 @@ class DatasetFmt:
         return messages
 
     @staticmethod
-    def chat_completion(
-        columns: List[str], data: Dict[str, Any]
-    ) -> List[Dict[str, str]]:
+    def chat_completion(columns: List[str], data: Dict[str, Any]) -> List[Dict[str, str]]:
         """
         Convert chat completion format to chat completion format.
 
@@ -124,10 +110,7 @@ class DatasetFmt:
         """
         # Enforce correct number of columns
         if len(columns) != 1:
-            raise ValueError(
-                f"Chat completion format requires exactly 1 column, "
-                f"got {len(columns)}: {columns}"
-            )
+            raise ValueError(f"Chat completion format requires exactly 1 column, got {len(columns)}: {columns}")
 
         # Extract messages from the specified mandatory column
         return data[columns[0]]
@@ -173,10 +156,7 @@ class DatasetFmt:
             List of message dict with "role" and "content" keys
         """
         if len(columns) != 1:
-            raise ValueError(
-                f"Raw text format requires exactly 1 column, "
-                f"got {len(columns)}: {columns}"
-            )
+            raise ValueError(f"Raw text format requires exactly 1 column, got {len(columns)}: {columns}")
 
         # Extract text from the arbitrary column - mandatory column
         text_content = data[columns[0]]

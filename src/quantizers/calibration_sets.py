@@ -97,9 +97,9 @@ class DatasetEntryConfig:
             raise ValueError("Split is required in calibration entry")
         if self.num_samples is None:
             raise ValueError("num_samples is required in calibration entry")
-        if not (
-            isinstance(self.num_samples, str) and self.num_samples == "all"
-        ) and not (isinstance(self.num_samples, int) and self.num_samples > 0):
+        if not (isinstance(self.num_samples, str) and self.num_samples == "all") and not (
+            isinstance(self.num_samples, int) and self.num_samples > 0
+        ):
             raise ValueError("num_samples must be a positive integer or 'all'")
         if not self.columns:
             raise ValueError("columns list cannot be empty")
@@ -153,9 +153,7 @@ class CalibrationSetConfig:
 
         # The file MUST have "calibration_set" key at the root level
         if "calibration_set" not in data:
-            raise ValueError(
-                "Configuration must have 'calibration_set' key at the root level"
-            )
+            raise ValueError("Configuration must have 'calibration_set' key at the root level")
         calib_data = data["calibration_set"]
 
         datasets_data = calib_data.get("datasets", [])
@@ -178,9 +176,7 @@ class CalibrationSetConfig:
 
         # The file MUST have "calibration_set" key containing the config
         if "calibration_set" not in data:
-            raise ValueError(
-                f"Calibration set file must have 'calibration_set' key: {path}"
-            )
+            raise ValueError(f"Calibration set file must have 'calibration_set' key: {path}")
 
         # Call from_dict with the full data dict, which must have a "calibration_set" key at the root
         return cls.from_dict(data)
@@ -275,9 +271,7 @@ class CalibrationSet:
         return cache_path.exists()
 
     @classmethod
-    def from_cache(
-        cls, config: CalibrationSetConfig, cache_dir: str = "./cache"
-    ) -> "CalibrationSet":
+    def from_cache(cls, config: CalibrationSetConfig, cache_dir: str = "./cache") -> "CalibrationSet":
         """Factory method to load calibration set from cache if available.
 
         Args:
@@ -324,9 +318,7 @@ class CalibrationSet:
         return instance
 
     @classmethod
-    def from_config(
-        cls, config: CalibrationSetConfig, cache_dir: str = "./cache"
-    ) -> "CalibrationSet":
+    def from_config(cls, config: CalibrationSetConfig, cache_dir: str = "./cache") -> "CalibrationSet":
         """Factory method to create calibration set from raw data.
 
         This method loads and consolidates datasets according to configuration,
@@ -404,9 +396,7 @@ class CalibrationSet:
             elif isinstance(ds.num_samples, int) and ds.num_samples > 0:
                 total_samples += ds.num_samples
             else:
-                raise ValueError(
-                    f"Invalid sample count in dataset {ds.dataset}: {ds.num_samples}"
-                )
+                raise ValueError(f"Invalid sample count in dataset {ds.dataset}: {ds.num_samples}")
         if total_samples_str == "":
             total_samples_str = str(total_samples)
 
@@ -454,9 +444,7 @@ class CalibrationSet:
 
             # Filter to number of samples requested
             if ds_config.num_samples != "all":
-                dataset = dataset.filter(
-                    lambda e, i: i < num_samples, with_indices=True
-                )
+                dataset = dataset.filter(lambda e, i: i < num_samples, with_indices=True)
 
             # Apply formatter function
             formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
@@ -561,10 +549,7 @@ class CalibrationSet:
         Saves the current _untokenized_calibration_set to the cache.
         """
         if self._untokenized_calibration_set is None:
-            raise RuntimeError(
-                "No calibration dataset to save. "
-                "Ensure dataset is available before calling save_to_cache()."
-            )
+            raise RuntimeError("No calibration dataset to save. Ensure dataset is available before calling save_to_cache().")
 
         if len(self._untokenized_calibration_set) == 0:
             logging.warning("Cannot save empty dataset to cache")

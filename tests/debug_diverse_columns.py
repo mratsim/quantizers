@@ -12,11 +12,12 @@ if src_path.exists():
     sys.path.insert(0, str(src_path))
 
 # Import the modules
+from datasets import load_dataset
+
 from quantizers.calibration_sets import (
     CalibrationSetConfig,
 )
 from quantizers.formatters import DatasetFmt
-from datasets import load_dataset
 
 try:
     IMPORTS_SUCCESS = True
@@ -30,9 +31,7 @@ def debug_chat_completion_formatter():
     print("\n=== Debugging Chat Completion Formatter ===")
 
     # Load the YAML config
-    calib_config = CalibrationSetConfig.from_file(
-        "tests/test_datasets/t_calibrate_diverse_columns.yaml"
-    )
+    calib_config = CalibrationSetConfig.from_file("tests/test_datasets/t_calibrate_diverse_columns.yaml")
 
     # Find the chat completion dataset
     chat_ds = None
@@ -42,9 +41,7 @@ def debug_chat_completion_formatter():
             break
 
     assert chat_ds is not None, "Chat completion dataset not found"
-    print(
-        f"Found chat completion dataset: {chat_ds.dataset}, columns: {chat_ds.columns}"
-    )
+    print(f"Found chat completion dataset: {chat_ds.dataset}, columns: {chat_ds.columns}")
 
     # Load the dataset directly and examine its structure
     dataset = load_dataset(chat_ds.dataset, split="train")
@@ -126,9 +123,7 @@ def verify_diverse_column_formats():
                 try:
                     formatter_func = DatasetFmt.get_formatter(formatter_name)
                     formatted = formatter_func(columns, first_row)
-                    print(
-                        f"  - {formatter_name}: {type(formatted)} - {str(formatted)[:50]}..."
-                    )
+                    print(f"  - {formatter_name}: {type(formatted)} - {str(formatted)[:50]}...")
                 except ValueError as e:
                     if formatter_name != columns[0].replace("s", ""):  # rough heuristic
                         print(f"  - {formatter_name}: Expected error - {str(e)}")

@@ -84,9 +84,7 @@ def test_sharegpt_formatter_with_arbitrary_columns():
     result_2 = DatasetFmt.sharegpt(columns_2, mock_data_2)
     assert result_2 == result
 
-    print(
-        "✅ ShareGPT formatter correctly handles arbitrary column names and uses input columns"
-    )
+    print("✅ ShareGPT formatter correctly handles arbitrary column names and uses input columns")
 
 
 def test_sharegpt_formatter_field_validation():
@@ -121,16 +119,12 @@ def test_sharegpt_formatter_field_validation():
     assert result[1]["content"] == "Hi there"
     assert "conversations" not in str(result)  # Should not hardcode this field
 
-    print(
-        "✅ ShareGPT formatter correctly handles conversations data from specified column"
-    )
+    print("✅ ShareGPT formatter correctly handles conversations data from specified column")
 
 
 def test_prompt_answer_formatter_with_arbitrary_columns():
     """Test that prompt-answer formatter works with arbitrary column names."""
-    print(
-        "\n=== Testing Prompt-Answer Formatter with Arbitrary Input/Output Column Names ==="
-    )
+    print("\n=== Testing Prompt-Answer Formatter with Arbitrary Input/Output Column Names ===")
 
     # Test case 1: ["prompt", "answer"] names
     mock_data_1 = {
@@ -171,9 +165,7 @@ def test_prompt_answer_formatter_with_arbitrary_columns():
         assert result[0]["role"] == "user", f"{test_name} first message should be user"
 
         # Second message should be assistant
-        assert (
-            result[1]["role"] == "assistant"
-        ), f"{test_name} second message should be assistant"
+        assert result[1]["role"] == "assistant", f"{test_name} second message should be assistant"
 
         # Check specific content for each test case
         if test_name == "prompt-answer":
@@ -230,9 +222,7 @@ def test_chat_completion_formatter_with_arbitrary_columns():
     assert result_2[0]["role"] == "system"
     assert result_2[0]["content"] == "You are a helpful assistant."
 
-    print(
-        "✅ Chat completion formatter correctly extracts messages from specified column"
-    )
+    print("✅ Chat completion formatter correctly extracts messages from specified column")
 
 
 def test_chat_completion_formatter_field_validation():
@@ -360,15 +350,11 @@ def test_formatter_column_count_handling():
     print("✅ Single column handling:")
     DatasetFmt.sharegpt(["col"], sharegpt_data)  # Should work (requires exactly 1)
     DatasetFmt.raw_text(["col"], raw_text_data)  # Should work (requires exactly 1)
-    DatasetFmt.chat_completion(
-        ["col"], chat_completion_data
-    )  # Should work (requires exactly 1)
+    DatasetFmt.chat_completion(["col"], chat_completion_data)  # Should work (requires exactly 1)
 
     # Test that formatters work with multiple columns (where supported)
     print("✅ Multiple column handling:")
-    DatasetFmt.prompt_answer(
-        ["col1", "col2"], prompt_answer_data
-    )  # Should work (requires exactly 2)
+    DatasetFmt.prompt_answer(["col1", "col2"], prompt_answer_data)  # Should work (requires exactly 2)
 
     # Test that prompt-answer fails with wrong column counts
     print("✅ Exact column count validation:")
@@ -451,12 +437,7 @@ def test_formatter_integration_with_calibration_set():
             seed=42,
             datasets=[
                 DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent
-                        / "test_datasets"
-                        / "prompt_answer"
-                        / "ds_instruction_response"
-                    ),
+                    dataset=str(Path(__file__).parent / "test_datasets" / "prompt_answer" / "ds_instruction_response"),
                     split="train",
                     columns=[
                         "instruction",
@@ -506,12 +487,7 @@ def test_calibration_set_with_dataset_columns():
             seed=42,
             datasets=[
                 DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent
-                        / "test_datasets"
-                        / "prompt_answer"
-                        / "ds_instruction_response"
-                    ),
+                    dataset=str(Path(__file__).parent / "test_datasets" / "prompt_answer" / "ds_instruction_response"),
                     split="train",
                     columns=[
                         "instruction",
@@ -531,9 +507,7 @@ def test_calibration_set_with_dataset_columns():
             raise AssertionError("CalibrationSet should have untokenized data")
         if len(calib_set._untokenized_calibration_set) <= 0:
             raise AssertionError("CalibrationSet should have data samples")
-        print(
-            "\n✅ CalibrationSet correctly processes data with correct dataset column names"
-        )
+        print("\n✅ CalibrationSet correctly processes data with correct dataset column names")
     except Exception as e:
         print(f"\n❌ CalibrationSet test with dataset columns failed: {e}")
         raise  # Re-raise to fail the test
@@ -550,9 +524,7 @@ def test_formatter_with_diverse_column_names():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(
-                    Path(__file__).parent / "test_datasets" / "sharegpt" / "ds_musings"
-                ),
+                dataset=str(Path(__file__).parent / "test_datasets" / "sharegpt" / "ds_musings"),
                 split="train",
                 columns=["musings"],  # Test with non-standard column name
                 formatter="sharegpt",
@@ -568,9 +540,7 @@ def test_formatter_with_diverse_column_names():
         # Verify properties
         assert calib_set.config == config
         assert calib_set._untokenized_calibration_set is not None
-        assert (
-            calib_set.total_num_samples == 3
-        )  # We have 3 samples in the musing dataset
+        assert calib_set.total_num_samples == 3  # We have 3 samples in the musing dataset
 
         # Verify that the data was processed correctly
         raw_dataset = calib_set._untokenized_calibration_set

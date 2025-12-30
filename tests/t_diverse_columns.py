@@ -15,10 +15,8 @@ To run these tests:
 import sys
 from pathlib import Path
 
-import pytest
-
 import datasets
-
+import pytest
 
 # Add the source directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -120,9 +118,7 @@ def test_load_diverse_columns_calibration_set():
     assert calib_set._untokenized_calibration_set is not None
     assert calib_set.total_num_samples > 0
 
-    print(
-        f"✅ Successfully loaded calibration set with {calib_set.total_num_samples} samples"
-    )
+    print(f"✅ Successfully loaded calibration set with {calib_set.total_num_samples} samples")
 
     # Test 4: Save to cache
     calib_set.save_to_cache()
@@ -157,9 +153,7 @@ def test_load_diverse_columns_calibration_set():
     # Test 9: Verify the cache key is deterministic
     cache_key = CalibrationSet.compute_cache_key(calibration_set_config)
     cache_key2 = CalibrationSet.compute_cache_key(calibration_set_config)
-    assert (
-        cache_key == cache_key2
-    ), f"Cache keys should be identical: {cache_key} != {cache_key2}"
+    assert cache_key == cache_key2, f"Cache keys should be identical: {cache_key} != {cache_key2}"
     print("✅ Cache key generation is deterministic")
 
     # Print the cache key for debugging
@@ -182,9 +176,7 @@ def test_yaml_direct_loading():
     print("\n=== Testing Direct YAML Loading ===")
 
     # Try to load the YAML directly
-    calib_config = CalibrationSetConfig.from_file(
-        "tests/test_datasets/t_calibrate_diverse_columns.yaml"
-    )
+    calib_config = CalibrationSetConfig.from_file("tests/test_datasets/t_calibrate_diverse_columns.yaml")
 
     # Verify we got a config object
     assert hasattr(calib_config, "datasets")
@@ -209,14 +201,12 @@ def test_problematic_mixed_dataset():
     """
     pytest.importorskip("quantizers.config")
 
-    from quantizers.calibration_sets import CalibrationSetConfig, CalibrationSet
+    from quantizers.calibration_sets import CalibrationSet, CalibrationSetConfig
 
     print("\n=== Testing Problematic Mixed Dataset ===")
 
     # Load the YAML config with diverse datasets
-    calib_config = CalibrationSetConfig.from_file(
-        "tests/test_datasets/t_calibrate_diverse_columns.yaml"
-    )
+    calib_config = CalibrationSetConfig.from_file("tests/test_datasets/t_calibrate_diverse_columns.yaml")
 
     # Verify all datasets are loaded
     assert len(calib_config.datasets) == 5
@@ -235,9 +225,7 @@ def test_problematic_mixed_dataset():
         raw_dataset = calib_set._untokenized_calibration_set
         for i, row in enumerate(raw_dataset):
             formatted = row["formatted"]
-            assert isinstance(
-                formatted, list
-            ), f"Row {i}: Expected list, got {type(formatted)}"
+            assert isinstance(formatted, list), f"Row {i}: Expected list, got {type(formatted)}"
             assert len(formatted) > 0, f"Row {i}: Formatted list is empty"
 
             # Check each message structure
@@ -267,12 +255,7 @@ def test_calibration_set_with_arbitrary_columns():
             seed=42,
             datasets=[
                 DatasetEntryConfig(
-                    dataset=str(
-                        Path(__file__).parent
-                        / "test_datasets"
-                        / "prompt_answer"
-                        / "ds_input_output"
-                    ),
+                    dataset=str(Path(__file__).parent / "test_datasets" / "prompt_answer" / "ds_input_output"),
                     split="train",
                     columns=["input", "output"],  # Existing column names in dataset
                     formatter="prompt_answer",
@@ -285,15 +268,9 @@ def test_calibration_set_with_arbitrary_columns():
         calib_set = CalibrationSet.from_config(config)
 
         # Get untokenized data to verify it works
-        assert (
-            calib_set._untokenized_calibration_set is not None
-        ), "CalibrationSet should have untokenized data"
-        assert (
-            len(calib_set._untokenized_calibration_set) > 0
-        ), "CalibrationSet should have data samples"
-        print(
-            "\n✅ CalibrationSet correctly processes data with arbitrary column names"
-        )
+        assert calib_set._untokenized_calibration_set is not None, "CalibrationSet should have untokenized data"
+        assert len(calib_set._untokenized_calibration_set) > 0, "CalibrationSet should have data samples"
+        print("\n✅ CalibrationSet correctly processes data with arbitrary column names")
     except Exception as e:
         pytest.fail(f"CalibrationSet test with arbitrary columns failed: {e}")
 
