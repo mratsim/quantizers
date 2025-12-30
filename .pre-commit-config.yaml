@@ -30,11 +30,11 @@ repos:
       - id: mypy
         args: [--ignore-missing-imports]
 
-  # - repo: https://github.com/PyCQA/bandit
-  #   rev: 1.7.9
-  #   hooks:
-  #     - id: bandit
-  #       args: [-r, src/, -x, "tests/*"]
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        args: [-r, src/]
 
   - repo: https://github.com/crate-ci/typos
     rev: v1.22.8
