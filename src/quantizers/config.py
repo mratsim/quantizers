@@ -7,11 +7,11 @@ Supports:
 - Recipes: quantization settings (path passed directly to llm-compressor)
 """
 
-import yaml
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, cast
-from dataclasses import dataclass, field
-import yaml
+from typing import Any, Dict, Optional
+
+import yaml  # type: ignore
 
 from .calibration_sets import CalibrationSetConfig
 
@@ -19,15 +19,13 @@ from .calibration_sets import CalibrationSetConfig
 @dataclass
 class ModelConfig:
     """Model configuration."""
+
     name: str
     revision: str = "main"
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ModelConfig":
-        return cls(
-            name=data.get("name", ""),
-            revision=data.get("revision", "main")
-        )
+        return cls(name=data.get("name", ""), revision=data.get("revision", "main"))
 
     def validate(self) -> None:
         if not self.name:
@@ -37,14 +35,14 @@ class ModelConfig:
 @dataclass
 class QuantizationConfig:
     """Quantization configuration (recipe path only)."""
+
     recipe: str
     calibration_set: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "QuantizationConfig":
         return cls(
-            recipe=data.get("recipe", ""),
-            calibration_set=data.get("calibration_set")
+            recipe=data.get("recipe", ""), calibration_set=data.get("calibration_set")
         )
 
     def validate(self) -> None:
@@ -55,12 +53,15 @@ class QuantizationConfig:
 @dataclass
 class QuantizationRunConfig:
     """Complete quantization run configuration."""
+
     model: ModelConfig
     quantization: QuantizationConfig
     calibration_set_config: Optional[CalibrationSetConfig] = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], config_path: str = None) -> "QuantizationRunConfig":
+    def from_dict(
+        cls, data: Dict[str, Any], config_path: Optional[str] = None
+    ) -> "QuantizationRunConfig":
         model = ModelConfig.from_dict(data.get("model", {}))
         quant_data = data.get("quantization", {})
         quantization = QuantizationConfig.from_dict(quant_data)
@@ -75,7 +76,7 @@ class QuantizationRunConfig:
             if not Path(calib_set_path).is_absolute() and config_path:
                 main_config_path = Path(config_path)
                 parent_dir = main_config_path.parent
-                
+
                 # Handle paths starting with "configs/"
                 if calib_set_path.startswith("configs/"):
                     # Skip the "configs/" prefix to avoid duplication
@@ -83,13 +84,13 @@ class QuantizationRunConfig:
                     calib_set_path = str(parent_dir / relative_path)
                 else:
                     calib_set_path = str(parent_dir / calib_set_path)
-            
+
             calib_set_config = CalibrationSetConfig.from_file(calib_set_path)
 
         return cls(
             model=model,
             quantization=quantization,
-            calibration_set_config=calib_set_config
+            calibration_set_config=calib_set_config,
         )
 
     def validate(self) -> None:
@@ -99,13 +100,12 @@ class QuantizationRunConfig:
             self.calibration_set_config.validate()
 
 
-
 def load_yaml(path: str) -> Dict[str, Any]:
     """Load and parse YAML file."""
-    path = Path(path)
-    if not path.exists():
+    path_obj = Path(path)
+    if not path_obj.exists():
         raise ValueError(f"Config file not found: {path}")
-    with open(path, 'r') as f:
+    with open(path_obj, "r") as f:
         return yaml.safe_load(f) or {}
 
 

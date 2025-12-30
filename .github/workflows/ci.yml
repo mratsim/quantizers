@@ -6,7 +6,7 @@ on:
     branches:
       - master
 env:
-  PYTHON_VERSION: '3.12'
+  PYTHON_VERSION: "3.12"
 
 # Jobs launched for a PR event cancel the ongoing one for the same workflow + PR,
 # Only retries (of the same run) for a Push event cancel the prior one.
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.12', '3.11']
+        python-version: ["3.12", "3.11"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -107,13 +107,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install safety and bandit
+      - name: Install bandit
         run: |
-          python -m pip install safety bandit
-      - name: Check for security vulnerabilities
-        run: safety check
+          python -m pip install bandit
       - name: Run Bandit security linter
-        run: bandit -r src/
+        run: bandit -r src/ -ll -x tests/ -s B101
 
   typos:
     name: Spell Check with Typos

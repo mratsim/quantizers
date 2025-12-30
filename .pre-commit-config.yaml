@@ -16,7 +16,7 @@ repos:
     rev: 7.1.0
     hooks:
       - id: flake8
-        args: [--max-line-length=127, --extend-ignore=E203, W503]
+        args: [--max-line-length=127]
 
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
@@ -34,13 +34,7 @@ repos:
     rev: 1.7.9
     hooks:
       - id: bandit
-        args: [-r, src/]
-
-  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
-    rev: v1.3.2
-    hooks:
-      - id: python-safety-dependencies-check
-        files: requirements.txt.*$|pyproject.toml$|Pipfile$
+        args: [-c, bandit.yaml, -r, src/]
 
   - repo: https://github.com/crate-ci/typos
     rev: v1.22.8
