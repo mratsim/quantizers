@@ -33,3 +33,17 @@ calibration_set:
       columns: ["data"]
       formatter: deepmind_code_contests
       num_samples: 3
+    - dataset: tests/test_datasets/diversoailab_humaneval_rust
+      split: train
+      columns: ["prompt"]
+      formatter: raw_text
+      num_samples: 10
+      formatter_params:
+        prefix: Solve the following problem using {{ ["Python", "Rust", "JavaScript", "Java", "C++"][hash(row|string) % 5] }}
+    - dataset: tests/test_datasets/MathArena_project_euler
+      split: train
+      columns: ["problem"]
+      formatter: raw_text
+      num_samples: 10
+      formatter_params:
+        prefix: Solve the following problem using {{ ["Zephyr", "Prolog", "Cobol", "Apex", "Crystal", "Fortran", "Nim", "Delphi", "Ada", "Objective-C", "VBA", "Perl", "Groovy", "MATLAB", "Solidity", "Visual Basic", "MicroPython", "OCaml", "Erlang", "Julia", "Lisp", "F#", "Clojure", "GDScript", "Scala", "R", "Haskell", "Ruby", "Elixir", "Assembly", "Lua", "Zig", "Dart", "Swift", "PowerShell", "PHP", "Kotlin", "C", "Java", "C++", "C#", "Bash/Shell", "Go", "Rust", "TypeScript", "HTML/CSS", "SQL", "JavaScript"][hash(row|string) % 50] }}
