@@ -464,11 +464,12 @@ class CalibrationSet:
             else:
                 # Handle cases where dataset is a tuple of multiple arguments
                 # nosec B615, B703
-                args = [ds_config.dataset[0]]
                 if ds_config.subset is not None:
-                    args.append(ds_config.subset)
-                args.append({"split": ds_config.split, "streaming": ds_config.streaming})
-                dataset = load_dataset(*args)  # nosec
+                    dataset = load_dataset(
+                        ds_config.dataset[0], ds_config.subset, split=ds_config.split, streaming=ds_config.streaming
+                    )  # nosec
+                else:
+                    dataset = load_dataset(ds_config.dataset[0], split=ds_config.split, streaming=ds_config.streaming)  # nosec
 
             # Resolve number of samples based on actual dataset size
             num_samples = ds_config.resolve_num_samples(ds_config.dataset, dataset)

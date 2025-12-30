@@ -2,15 +2,17 @@
 import sys
 from pathlib import Path
 
+from datasets import load_dataset
+from jinja2 import Environment, StrictUndefined
+
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from quantizers.calibration_sets import CalibrationSetConfig
 
 
 def test_humaneval_jinja_templates():
     """Test that Jinja templates work with our test dataset."""
-    from jinja2 import Environment, StrictUndefined
-
-    from quantizers.calibration_sets import CalibrationSetConfig
 
     # Load our config from the main test configuration
     config_path = Path(__file__).parent / "test_datasets" / "t_calibrate_diverse_columns.yaml"
@@ -49,9 +51,6 @@ def test_humaneval_jinja_templates():
 
     # Should have found multiple languages
     assert len(found_languages) >= 2, f"Should find multiple languages, found: {found_languages}"
-
-    # Test with the actual dataset
-    from datasets import load_dataset
 
     dataset = load_dataset(str(Path(__file__).parent / "test_datasets" / "diversoailab_humaneval_rust"), split="train")
 

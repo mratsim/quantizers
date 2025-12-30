@@ -4,13 +4,13 @@ This module contains tests for formatters that are specific to certain datasets.
 """
 # ruff: noqa: E501
 
-import os
 import sys
+from pathlib import Path
 
 import pytest
 
 # Add the src directory to the path so we can import the module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from quantizers.formatters import DatasetFmt
 

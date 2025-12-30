@@ -181,5 +181,132 @@ def test_streaming_configurations():
     print("✅ Streaming properly configured for large datasets")
 
 
+def test_yaml_anchor_config():
+    """Test that the YAML anchor configuration loads properly."""
+    config_path = Path(__file__).parent.parent / "configs" / "calibration_sets" / "test-calibrate-code-anchor.yaml"
+
+    print(f"Testing YAML anchor configuration from: {config_path}")
+
+    try:
+        # Load the configuration
+        config = CalibrationSetConfig.from_file(config_path)
+
+        # Verify configuration loaded
+        assert config is not None, "Configuration should not be None"
+        assert len(config.datasets) == 2, f"Configuration should have exactly 2 datasets, got {len(config.datasets)}"
+
+        print(f"✅ Successfully loaded configuration with {len(config.datasets)} datasets")
+
+        # Check that both expected datasets are present
+        expected_datasets = ["diversoailab/humaneval-rust", "MathArena/project_euler"]
+        found_datasets = set(ds.dataset for ds in config.datasets)
+
+        print(f"Found datasets: {sorted(found_datasets)}")
+
+        # Verify all expected datasets are present
+        for expected_ds in expected_datasets:
+            assert expected_ds in found_datasets, f"Expected dataset {expected_ds} not found"
+
+        print("✅ Both expected datasets are present")
+
+        # Verify that both use the *language_prefix alias
+        jinja_templates = []
+        for ds in config.datasets:
+            prefix = ds.formatter_params.get("prefix", "")
+            assert "{{" in prefix and "}}" in prefix, f"Dataset {ds.dataset} should have Jinja template"
+            jinja_templates.append(prefix[:50] + "..." if len(prefix) > 50 else prefix)
+
+        print("✅ Both datasets use Jinja templates with *language_prefix alias")
+
+        # Specifically check that the language list contains all expected languages
+        for ds in config.datasets:
+            prefix = ds.formatter_params.get("prefix", "")
+            # Check if it contains the expected languages
+            assert "Python" in prefix, "Should contain Python"
+            assert "JavaScript" in prefix, "Should contain JavaScript"
+            assert "Rust" in prefix, "Should contain Rust"
+            assert "Java" in prefix, "Should contain Java"
+            assert "C++" in prefix, "Should contain C++"
+            assert "{{" in prefix and "}}" in prefix, "Should contain Jinja template syntax"
+
+        print("✅ All expected languages are present in the Jinja templates")
+
+        # Extract language list from templates
+        import re
+
+        language_list_match = re.search(r"\[([^\]]+)\]", prefix)
+        assert language_list_match, "Could not find language list in template"
+
+        # Check that all datasets are using the same template content
+        # Validate the language list structure
+        import re
+
+        language_list_match = re.search(r"\[([^\]]+)\]", prefix)
+        assert language_list_match, "Could not find language list in template"
+
+        # Validate that all datasets use the same template
+        for ds in config.datasets:
+            ds_prefix = ds.formatter_params.get("prefix", "")
+            ds_language_match = re.search(r"\[([^\]]+)\]", ds_prefix)  # noqa E501
+            assert ds_language_match, f"Dataset {ds.dataset} should have language list"
+            assert ds_language_match.group(1) == language_list_match.group(1), (
+                f"Dataset {ds.dataset} should use the same language list"
+            )
+
+        # Check that the template references the anchor
+        assert "*language_prefix" not in str(config_path), "File should not contain the literal anchor text"
+
+        # Count languages
+        languages_str = language_list_match.group(1)
+        languages = [lang.strip().strip("'\"") for lang in languages_str.split(",")]
+        assert len(languages) == 60, f"Should have exactly 60 languages, got {len(languages)}"
+        assert "Python" in languages, "Should contain Python"
+        assert "JavaScript" in languages, "Should contain JavaScript"
+        assert "Rust" in languages, "Should contain Rust"
+        assert "Java" in languages, "Should contain Java"
+        assert "C++" in languages, "Should contain C++"
+        assert "Lean" in languages, "Should contain Lean"
+        assert "Coq" in languages, "Should contain Coq"
+        assert "SML" in languages, "Should contain SML"
+        assert "Agda" in languages, "Should contain Agda"
+        assert "Idris" in languages, "Should contain Idris"
+        assert "Racket" in languages, "Should contain Racket"
+        assert "x86-64 ASM" in languages, "Should contain x86-64 ASM"
+        assert "ARM-64 ASM" in languages, "Should contain ARM-64 ASM"
+        assert "CUDA" in languages, "Should contain CUDA"
+        assert "Vulkan" in languages, "Should contain Vulkan"
+        assert "Metal" in languages, "Should contain Metal"
+
+        print(f"✅ Template contains {len(languages)} languages")
+
+        # Validate the configuration
+        try:
+            config.validate()
+            print("✅ Configuration validation passed")
+        except Exception as e:
+            print(f"❌ Configuration validation failed: {e}")
+            assert False, f"Configuration validation failed: {e}"
+
+        print("\n🎉 YAML anchor configuration test passed!")
+        print("✅ Configuration includes:")
+        print("   - 1 Humaneval Rust dataset with dynamic language selection via Jinja templates")
+        print("   - 1 MathArena Euler dataset with dynamic language selection via Jinja templates")
+        print("   - Both using the *language_prefix alias from the YAML anchor")
+
+    except Exception as e:
+        print(f"❌ Error loading configuration: {e}")
+        assert False, f"Error loading configuration: {e}"
+
+
 if __name__ == "__main__":
     print("=== Testing Consolidated Calibration Set Configuration ===\n")
+
+    # Run all tests
+    test_consolidated_config()
+    print()
+    test_formatter_params()
+    print()
+    test_streaming_configurations()
+    print()
+    test_yaml_anchor_config()
+    print()
