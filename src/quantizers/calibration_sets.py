@@ -305,7 +305,7 @@ class CalibrationSet:
                 f"before loading, or CalibrationSet.from_config() to build from raw data. "
                 f"Expected cache file: {cache_path}"
             )
-        
+
         try:
             logging.info(f"Loading from cache: {cache_path}")
             # Load directly as HuggingFace Dataset from Parquet

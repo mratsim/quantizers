@@ -15,7 +15,6 @@ To run these tests:
     uv run python tests/t_calibration_sets.py
 """
 
-import json
 import sys
 import tempfile
 from pathlib import Path
@@ -75,10 +74,12 @@ def test_creating_calibration_set():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="test/dataset",
+                dataset=str(
+                    Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
+                ),
                 split="train",
-                columns=["messages"],
-                formatter="sharegpt",
+                columns=["text"],
+                formatter="raw_text",
                 num_samples=10,
             )
         ],
@@ -195,9 +196,14 @@ def test_save_and_load():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="test/dataset",
+                dataset=str(
+                    Path(__file__).parent
+                    / "test_datasets"
+                    / "sharegpt"
+                    / "ds_conversations"
+                ),
                 split="train",
-                columns=["messages"],
+                columns=["conversations"],
                 formatter="sharegpt",
                 num_samples=3,
             )
@@ -275,66 +281,36 @@ def test_create_from_config():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="test/dataset",
+                dataset=str(
+                    Path(__file__).parent
+                    / "test_datasets"
+                    / "chat_completion"
+                    / "ds_messages"
+                ),
                 split="train",
-                columns=["messages_col"],
+                columns=["messages"],
                 formatter="chat_completion",
                 num_samples=10,
             )
         ],
     )
 
-    # Create a local test dataset
-    test_data = [
-        {
-            "messages_col": {
-                "messages": [
-                    {"role": "user", "content": "What is 2+2?"},
-                    {"role": "assistant", "content": "4"},
-                ]
-            }
-        },
-        {
-            "messages_col": {
-                "messages": [
-                    {"role": "user", "content": "What is the capital of France?"},
-                    {"role": "assistant", "content": "Paris"},
-                ]
-            }
-        },
-    ]
+    # Create using factory method
+    calib_set = CalibrationSet.from_config(config, cache_dir="cache")
 
-    # Create temporary dataset directory with JSON files
-    with tempfile.TemporaryDirectory() as temp_dir:
-        dataset_dir = Path(temp_dir) / "chat_completion_data"
-        dataset_dir.mkdir()
+    # Verify properties
+    assert calib_set.config == config
+    assert str(calib_set.cache_dir) == "cache"
+    assert calib_set._untokenized_calibration_set is not None
+    assert calib_set.total_num_samples == 3
 
-        # Write test data to a JSON file
-        file_path = dataset_dir / "train.json"
-        with open(file_path, "w") as f:
-            for item in test_data:
-                f.write(json.dumps(item) + "\n")
+    # Test that we can get tokenized data
+    mock_tokenizer = MockTokenizer()
+    tokenized_dataset = calib_set.get_tokenized(mock_tokenizer)
+    assert tokenized_dataset is not None
+    assert len(tokenized_dataset) == 3
 
-        # Update config to use local dataset and chat completion format
-        config.datasets[0].dataset = str(dataset_dir)
-        config.datasets[0].columns = ["messages_col"]  # This matches our column name
-
-        # Create using factory method
-        calib_set = CalibrationSet.from_config(config, cache_dir="cache")
-
-        # Verify properties
-        assert calib_set.config == config
-        assert str(calib_set.cache_dir) == "cache"
-        assert calib_set._untokenized_calibration_set is not None
-        assert calib_set.total_num_samples == 2
-
-        # Test that we can get tokenized data
-        mock_tokenizer = MockTokenizer()
-        tokenized_dataset = calib_set.get_tokenized(mock_tokenizer)
-        assert tokenized_dataset is not None
-        assert len(tokenized_dataset) == 2
-
-        print("✅ Create from config test passed")
+    print("✅ Create from config test passed")
 
 
 def test_dataset_entry_config_validation():
@@ -364,39 +340,40 @@ def test_dataset_entry_config_resolve_num_samples():
     """Test that DatasetEntryConfig correctly resolves num_samples."""
     print("\n=== Testing DatasetEntryConfig Resolve Num Samples ===")
 
-    # Test with actual dataset
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Create a small dataset
-        dataset_dict = {
-            "text": ["Sample 1", "Sample 2", "Sample 3", "Sample 4", "Sample 5"]
-        }
-        dataset = datasets.Dataset.from_dict(dataset_dict)
-        dataset.save_to_disk(temp_dir)
+    # Test with actual dataset from test_datasets
+    test_dataset_path = str(
+        Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
+    )
 
-        # Create DatasetEntryConfig that will use the dataset
-        entry = DatasetEntryConfig(
-            dataset=temp_dir,
-            split="train",
-            columns=["text"],
-            formatter="raw_text",
-            num_samples=3,
-        )
+    # Load the actual test dataset to get its size
+    dataset = datasets.load_dataset(test_dataset_path, split="train")
+    dataset_size = len(dataset)
+    print(f"Loaded test dataset with {dataset_size} samples")
 
-        # Test with num_samples less than dataset size - should return requested number
-        resolved = entry.resolve_num_samples(f"test/{temp_dir}", dataset)
-        assert resolved == 3  # Should use the requested number
+    # Create DatasetEntryConfig that will use the dataset
+    entry = DatasetEntryConfig(
+        dataset=test_dataset_path,
+        split="train",
+        columns=["text"],
+        formatter="raw_text",
+        num_samples=3,
+    )
 
-        # Test with num_samples larger than dataset size - should cap at dataset size
-        entry.num_samples = 10
-        resolved = entry.resolve_num_samples(f"test/{temp_dir}", dataset)
-        assert resolved == 5  # Should cap at dataset size
+    # Test with num_samples less than dataset size - should return requested number
+    resolved = entry.resolve_num_samples(test_dataset_path, dataset)
+    assert resolved == 3  # Should use the requested number
 
-        # Test with "all" - should use the entire dataset
-        entry.num_samples = "all"
-        resolved = entry.resolve_num_samples(f"test/{temp_dir}", dataset)
-        assert resolved == 5  # Should use the entire dataset
+    # Test with num_samples larger than dataset size - should cap at dataset size
+    entry.num_samples = 10
+    resolved = entry.resolve_num_samples(test_dataset_path, dataset)
+    assert resolved == dataset_size  # Should cap at dataset size
 
-        print("✅ DatasetEntryConfig resolve_num_samples test passed")
+    # Test with "all" - should use the entire dataset
+    entry.num_samples = "all"
+    resolved = entry.resolve_num_samples(test_dataset_path, dataset)
+    assert resolved == dataset_size  # Should use the entire dataset
+
+    print("✅ DatasetEntryConfig resolve_num_samples test passed")
 
 
 def test_dataset_entry_config_requirements():
@@ -564,10 +541,12 @@ def test_edge_cases():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset="test/dataset",
+                dataset=str(
+                    Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
+                ),
                 split="train",
-                columns=["messages"],
-                formatter="sharegpt",
+                columns=["text"],
+                formatter="raw_text",
                 num_samples=10,
             )
         ],
@@ -580,10 +559,12 @@ def test_edge_cases():
     # Test with very large num_samples
     try:
         entry = DatasetEntryConfig(
-            dataset="test/dataset",
+            dataset=str(
+                Path(__file__).parent / "test_datasets" / "raw_text" / "ds_text"
+            ),
             split="train",
-            columns=["messages"],
-            formatter="sharegpt",
+            columns=["text"],
+            formatter="raw_text",
             num_samples=1000000000,
         )
         config.datasets = [entry]
@@ -597,8 +578,10 @@ def test_edge_cases():
 
     # Test with empty datasets - validation should happen at entry points
     try:
-        config.datasets = []
-        calib_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
+        empty_config = CalibrationSetConfig(
+            max_seq_length=4096, shuffle=False, seed=42, datasets=[]
+        )
+        calib_set = CalibrationSet.from_config(config=empty_config, cache_dir="./cache")
         assert False, "Expected ValueError for empty datasets"
     except ValueError as e:
         assert "at least one dataset" in str(e)
