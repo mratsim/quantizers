@@ -21,4 +21,4 @@ outputs/
 logs/
 
 # Cache files
-tests/cache/*.parquet
+tests/test_cache/*.parquet
