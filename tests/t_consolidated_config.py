@@ -116,12 +116,6 @@ def test_consolidated_config():
                 print(f"   - {template}")
 
         print("\n🎉 Consolidated configuration test passed!")
-        print("✅ Configuration includes:")
-        print("   - 4 Original datasets (code contests, open code instruct, code arena, llama nemotron)")
-        print("   - 1 Stack Rust dataset with code explanation")
-        print("   - 3 Humaneval datasets with static language selection (Python, JavaScript, Java)")
-        print("   - 1 Humaneval dataset with dynamic language selection via Jinja templates")
-        print("   - Total of 9 diverse dataset entries with streaming support")
 
     except Exception as e:
         print(f"❌ Error loading configuration: {e}")
@@ -284,10 +278,6 @@ def test_yaml_anchor_config():
             assert False, f"Configuration validation failed: {e}"
 
         print("\n🎉 YAML anchor configuration test passed!")
-        print("✅ Configuration includes:")
-        print("   - 1 Humaneval Rust dataset with dynamic language selection via Jinja templates")
-        print("   - 1 MathArena Euler dataset with dynamic language selection via Jinja templates")
-        print("   - Both using the *language_prefix alias from the YAML anchor")
 
     except Exception as e:
         print(f"❌ Error loading configuration: {e}")
