@@ -40,8 +40,8 @@ def main():
         )
         print("✅ Created CalibrationSetConfig:", config)
 
-        # Create CalibrationSet instance
-        calib_set = CalibrationSet(config)
+        # Create CalibrationSet instance using factory method
+        calib_set = CalibrationSet.from_config(config)
         print("✅ Created CalibrationSet instance")
 
         # Test cache key generation

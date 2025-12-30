@@ -51,12 +51,12 @@ def test_sharegpt_format_loading():
 
     # Verify properties
     assert calib_set.config == config
-    assert calib_set.untokenized_calibration_set is not None
+    assert calib_set._untokenized_calibration_set is not None
     assert calib_set.total_num_samples == 3
 
     # Check that the data was loaded correctly
     # Just verify the untokenized data has the expected structure
-    raw_dataset = calib_set.untokenized_calibration_set
+    raw_dataset = calib_set._untokenized_calibration_set
     assert len(raw_dataset) == 3
 
     # Verify the data format
@@ -104,12 +104,12 @@ def test_prompt_answer_format_loading():
 
     # Verify properties
     assert calib_set.config == config
-    assert calib_set.untokenized_calibration_set is not None
+    assert calib_set._untokenized_calibration_set is not None
     assert calib_set.total_num_samples == 3
 
     # Check that the data was loaded correctly
     # Just verify the untokenized data has the expected structure
-    raw_dataset = calib_set.untokenized_calibration_set
+    raw_dataset = calib_set._untokenized_calibration_set
     assert len(raw_dataset) == 3
 
     # Verify the data format
@@ -119,7 +119,7 @@ def test_prompt_answer_format_loading():
         assert isinstance(messages, list), f"Row {i} messages not a list"
         assert (
             len(messages) >= 2
-        ), f"Row {i} should have at least user and assistant messages"
+        ), f"Row {i} messages should have at least 2 elements (system and user)"
 
         # Check for user and assistant messages
         has_user = any(msg.get("role") == "user" for msg in messages)
@@ -157,12 +157,12 @@ def test_chat_completion_format_loading():
 
     # Verify properties
     assert calib_set.config == config
-    assert calib_set.untokenized_calibration_set is not None
+    assert calib_set._untokenized_calibration_set is not None
     assert calib_set.total_num_samples == 3
 
     # Check that the data was loaded correctly
     # Just verify the untokenized data has the expected structure
-    raw_dataset = calib_set.untokenized_calibration_set
+    raw_dataset = calib_set._untokenized_calibration_set
     assert len(raw_dataset) == 3
 
     # Verify the data format
@@ -212,12 +212,12 @@ def test_raw_text_format_loading():
 
     # Verify properties
     assert calib_set.config == config
-    assert calib_set.untokenized_calibration_set is not None
+    assert calib_set._untokenized_calibration_set is not None
     assert calib_set.total_num_samples == 5
 
     # Check that the data was loaded correctly
     # Just verify the untokenized data has the expected structure
-    raw_dataset = calib_set.untokenized_calibration_set
+    raw_dataset = calib_set._untokenized_calibration_set
     assert len(raw_dataset) == 5
 
     # Verify the data format
@@ -277,19 +277,31 @@ def test_multiple_dataset_loading():
 
     # Verify properties
     assert calib_set.config == config
-    assert calib_set.untokenized_calibration_set is not None
+    assert calib_set._untokenized_calibration_set is not None
     assert calib_set.total_num_samples == 5  # 2 + 2 + 1
 
     # Check that the data was loaded correctly
     # Just verify the untokenized data has the expected structure
-    raw_dataset = calib_set.untokenized_calibration_set
-    assert len(raw_dataset) == 5
+    raw_dataset = calib_set._untokenized_calibration_set
+    assert (
+        len(raw_dataset) == 5
+    )  # 2 from sharegpt + 2 from prompt-answer + 1 from raw_text
 
-    # Verify all rows have formatted messages
+    # Verify the data format has been properly transformed by the formatter
     for i, row in enumerate(raw_dataset):
         assert "formatted" in row, f"Row {i} missing formatted field"
         messages = row["formatted"]
         assert isinstance(messages, list), f"Row {i} messages not a list"
+        # Different formatters produce different message lengths
+        # Raw text formatter produces 1 message, others produce 2+
+        if i >= 4:  # This is the raw text formatter data
+            assert (
+                len(messages) >= 1
+            ), f"Row {i} messages should have at least 1 element (raw text)"
+        else:
+            assert (
+                len(messages) >= 2
+            ), f"Row {i} messages should have at least 2 elements (chat/prompt-answer)"
 
         # Determine which dataset this row came from
         if i < 2:
@@ -423,7 +435,7 @@ def test_arbitrary_column_names():
 
     # Check that the data was loaded correctly
     # Just verify the untokenized data has the expected structure
-    raw_dataset = calib_set.untokenized_calibration_set
+    raw_dataset = calib_set._untokenized_calibration_set
     assert len(raw_dataset) == 2
 
     # Verify arbitrary column names were correctly mapped

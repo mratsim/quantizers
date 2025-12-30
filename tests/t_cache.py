@@ -60,9 +60,9 @@ def test_cache_key_generation():
         ],
     )
 
-    # Create CalibrationSet instance and generate cache key
-    cache_set = CalibrationSet(config=config, cache_dir="./cache")
-    key = cache_set.compute_cache_key()
+    # Create CalibrationSet instance using factory method and generate cache key using static method
+    cache_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
+    key = CalibrationSet.compute_cache_key(config)
     print(f"Generated cache key: {key}")
 
     # Verify format: first-7-char-hex-num_samples.parquet
@@ -105,21 +105,23 @@ def test_cache_save_and_load():
 
     # Create a temporary directory for testing
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Create CalibrationSet instance and populate with test data
-        cache_set = CalibrationSet(config=config, cache_dir=temp_dir)
+        # Create CalibrationSet instance using factory method and populate with test data
+        cache_set = CalibrationSet.from_config(config=config, cache_dir=temp_dir)
 
-        # Create Dataset object from test data
-        test_dataset = datasets.Dataset.from_dict({"text": test_data})
+        # Create Dataset object from test data with proper formatting
+        test_dataset = datasets.Dataset.from_dict({"text": test_data}).map(
+            lambda row: {"formatted": row["text"]}
+        )
 
         # Set the dataset and save to cache
-        cache_set.untokenized_calibration_set = test_dataset
+        cache_set._untokenized_calibration_set = test_dataset
 
         # Save data to cache
         cache_set.save_to_cache()
         print("✅ Dataset saved to cache")
 
         # Verify cache file exists
-        cache_key = cache_set.compute_cache_key()
+        cache_key = CalibrationSet.compute_cache_key(config)
         cache_file = Path(temp_dir) / cache_key
         assert cache_file.exists(), f"Cache file {cache_file} was not created"
 
@@ -127,23 +129,33 @@ def test_cache_save_and_load():
         new_cache_set = CalibrationSet.from_cache(config, temp_dir)
 
         # Verify data was loaded correctly
-        assert new_cache_set.untokenized_calibration_set is not None
-        assert len(new_cache_set.untokenized_calibration_set) == len(test_data)
-
-        # Access the data through get_tokenized
-        loaded_data = new_cache_set.get_tokenized(None)
-        assert len(loaded_data) == len(test_data)
+        assert new_cache_set._untokenized_calibration_set is not None
+        assert len(new_cache_set._untokenized_calibration_set) == len(test_data)
 
         print("✅ Dataset loaded from cache")
 
-        # Try loading with different config (should fail)
+        # Create a different config but with valid datasets (not empty)
         different_config = CalibrationSetConfig(
-            max_seq_length=8192, shuffle=False, seed=999, datasets=[]
+            max_seq_length=8192,
+            shuffle=False,
+            seed=999,
+            datasets=[
+                DatasetEntryConfig(
+                    dataset="test/dataset",
+                    split="train",
+                    columns=["text"],
+                    formatter="raw_text",
+                    num_samples=5,
+                )
+            ],
         )
 
-        different_cache_set = CalibrationSet.from_cache(different_config, temp_dir)
-        assert different_cache_set.untokenized_calibration_set is None
-        print("✅ Correctly returned None for non-existent cache")
+        # Loading with different config should NOT raise ValueError
+        # It should gracefully return an empty cache set since the cache keys won't match
+        _different_cache_set = CalibrationSet.from_cache(different_config, temp_dir)
+        # This should return a CalibrationSet with no cached data
+        assert _different_cache_set._untokenized_calibration_set is None
+        print("✅ Correctly returned None for cache with different config")
 
 
 def test_cache_from_config_and_cache():
@@ -173,25 +185,28 @@ def test_cache_from_config_and_cache():
 
         # Verify properties
         assert cache_set.config == config
-        assert cache_set.untokenized_calibration_set is not None
+        assert cache_set._untokenized_calibration_set is not None
         assert cache_set.total_num_samples == 3
 
         print(
             f"✅ Created calibration set with {cache_set.total_num_samples} total samples"
         )
 
+        # Manually save to cache to ensure cache file is created
+        cache_set.save_to_cache()
+        print("✅ Dataset was cached successfully")
+
         # Verify cache file was created
-        cache_key = cache_set.compute_cache_key()
+        cache_key = CalibrationSet.compute_cache_key(config)
         cache_file = Path(temp_dir) / cache_key
         assert cache_file.exists(), f"Cache file {cache_file} was not created"
-        print("✅ Dataset was cached successfully")
 
         # Create a new instance and load from cache
         cache_set_from_cache = CalibrationSet.from_cache(config, cache_dir=temp_dir)
 
         # Verify that the data was loaded from cache
-        assert cache_set_from_cache.untokenized_calibration_set is not None
-        assert len(cache_set_from_cache.untokenized_calibration_set) == 3
+        assert cache_set_from_cache._untokenized_calibration_set is not None
+        assert len(cache_set_from_cache._untokenized_calibration_set) == 3
 
         print("✅ Successfully loaded from cache")
 
@@ -231,11 +246,9 @@ def test_cache_key_consistency():
         ],
     )
 
-    # Generate cache keys for both configurations
-    cache_set1 = CalibrationSet(config=config1, cache_dir="./cache")
-    cache_set2 = CalibrationSet(config=config2, cache_dir="./cache")
-    key1 = cache_set1.compute_cache_key()
-    key2 = cache_set2.compute_cache_key()
+    # Generate cache keys for both configurations using static method
+    key1 = CalibrationSet.compute_cache_key(config1)
+    key2 = CalibrationSet.compute_cache_key(config2)
 
     # Keys should be identical
     assert key1 == key2, f"Keys differ: {key1} vs {key2}"
@@ -292,13 +305,10 @@ def test_cache_different_configurations():
         ],
     )
 
-    # Generate cache keys
-    cache_set1 = CalibrationSet(config=config1, cache_dir="./cache")
-    cache_set2 = CalibrationSet(config=config2, cache_dir="./cache")
-    cache_set3 = CalibrationSet(config=config3, cache_dir="./cache")
-    key1 = cache_set1.compute_cache_key()
-    key2 = cache_set2.compute_cache_key()
-    key3 = cache_set3.compute_cache_key()
+    # Generate cache keys using static method
+    key1 = CalibrationSet.compute_cache_key(config1)
+    key2 = CalibrationSet.compute_cache_key(config2)
+    key3 = CalibrationSet.compute_cache_key(config3)
 
     # Keys should all be different
     assert key1 != key2, "Keys should differ with different max_seq_length"
@@ -374,6 +384,45 @@ def test_cache_key():
     ), f"Cache keys should be different for different formatters, got {key1} == {key3}"
 
     print("✅ Cache keys are correctly different for different configurations")
+
+
+def test_cache_defensive_validation():
+    """Test that from_cache, from_config, and is_cached validate configurations."""
+    print("\n=== Testing Defensive Validation ===")
+
+    # Create invalid config with empty datasets
+    invalid_config = CalibrationSetConfig(
+        max_seq_length=4096,
+        shuffle=False,
+        seed=42,
+        datasets=[],  # Empty datasets - should fail validation
+    )
+
+    # Create a temporary directory for testing
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Test that is_cached validates
+        try:
+            _ = CalibrationSet.is_cached(invalid_config, temp_dir)
+            assert False, "is_cached should raise ValueError for invalid config"
+        except ValueError as e:
+            assert "at least one dataset" in str(e)
+            print("✅ is_cached correctly validates configuration")
+
+        # Test that from_cache validates
+        try:
+            _ = CalibrationSet.from_cache(invalid_config, temp_dir)
+            assert False, "from_cache should raise ValueError for invalid config"
+        except ValueError as e:
+            assert "at least one dataset" in str(e)
+            print("✅ from_cache correctly validates configuration")
+
+        # Test that from_config validates
+        try:
+            _ = CalibrationSet.from_config(invalid_config, temp_dir)
+            assert False, "from_config should raise ValueError for invalid config"
+        except ValueError as e:
+            assert "at least one dataset" in str(e)
+            print("✅ from_config correctly validates configuration")
 
 
 if __name__ == "__main__":

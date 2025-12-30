@@ -84,16 +84,15 @@ def test_creating_calibration_set():
         ],
     )
 
-    # Create CalibrationSet instance
-    calib_set = CalibrationSet(config=config)
+    # Create CalibrationSet instance using factory method
+    calib_set = CalibrationSet.from_config(config=config)
 
     # Verify properties
     assert calib_set.config == config
     assert str(calib_set.cache_dir) == "cache"
-    assert calib_set.untokenized_calibration_set is None
-    assert (
-        calib_set.total_num_samples == 0
-    )  # It's now a property that returns 0 when unloaded
+    # from_config loads and processes datasets, so _untokenized_calibration_set will not be None
+    assert calib_set._untokenized_calibration_set is not None
+    assert calib_set.total_num_samples == 5  # Raw text dataset has 5 samples
 
     print("✅ CalibrationSet creation test passed")
 
@@ -206,8 +205,8 @@ def test_save_and_load():
     )
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Create CalibrationSet instance
-        calib_set = CalibrationSet(config=config, cache_dir=temp_dir)
+        # Create CalibrationSet instance using factory method
+        calib_set = CalibrationSet.from_config(config=config, cache_dir=temp_dir)
 
         # Create mock untokenized dataset as HuggingFace Dataset with formatted messages
         mock_dataset = datasets.Dataset.from_dict(
@@ -230,7 +229,7 @@ def test_save_and_load():
         )
 
         # Set the dataset and save to cache using new API
-        calib_set.untokenized_calibration_set = mock_dataset
+        calib_set._untokenized_calibration_set = mock_dataset
         calib_set.save_to_cache()
 
         # Verify cache file exists (now saving as Parquet file directly)
@@ -326,7 +325,7 @@ def test_create_from_config():
         # Verify properties
         assert calib_set.config == config
         assert str(calib_set.cache_dir) == "cache"
-        assert calib_set.untokenized_calibration_set is not None
+        assert calib_set._untokenized_calibration_set is not None
         assert calib_set.total_num_samples == 2
 
         # Test that we can get tokenized data
@@ -573,7 +572,7 @@ def test_edge_cases():
             )
         ],
     )
-    calib_set = CalibrationSet(config=config)
+    calib_set = CalibrationSet.from_config(config=config)
     assert calib_set.config.max_seq_length == 0
 
     print("✅ Config with max_seq_length=0 handled gracefully")
@@ -588,7 +587,7 @@ def test_edge_cases():
             num_samples=1000000000,
         )
         config.datasets = [entry]
-        calib_set = CalibrationSet(config=config)
+        calib_set = CalibrationSet.from_config(config=config)
         # If we get here without an exception, the large number was handled gracefully
         print(
             f"✅ Very large num_samples ({entry.num_samples}) handled gracefully by using all available samples"
@@ -596,10 +595,10 @@ def test_edge_cases():
     except Exception as e:
         print(f"ℹ️  Large num_samples test resulted in expected behavior: {e}")
 
-    # Test with empty datasets
+    # Test with empty datasets - validation should happen at entry points
     try:
         config.datasets = []
-        calib_set = CalibrationSet(config=config)
+        calib_set = CalibrationSet.from_config(config=config, cache_dir="./cache")
         assert False, "Expected ValueError for empty datasets"
     except ValueError as e:
         assert "at least one dataset" in str(e)

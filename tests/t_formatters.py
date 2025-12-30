@@ -439,8 +439,8 @@ def test_formatter_integration_with_calibration_set():
     )
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Create calibration set
-        calib_set = CalibrationSet(config=config, cache_dir=temp_dir)
+        # Create calibration set and directly assign the dataset
+        calib_set = CalibrationSet.from_config(config=config, cache_dir=temp_dir)
 
         # Create mock dataset with formatted data already applied
         mock_dataset = datasets.Dataset.from_dict(
@@ -470,7 +470,7 @@ def test_formatter_integration_with_calibration_set():
                 ]
             }
         )
-        calib_set.untokenized_calibration_set = mock_dataset
+        calib_set._untokenized_calibration_set = mock_dataset
 
         # Create mock tokenizer
         tokenizer = MockTokenizer([1, 2, 3, 4, 5])
@@ -518,10 +518,10 @@ def test_calibration_set_with_arbitrary_columns():
 
         # Get untokenized data to verify it works
         assert (
-            calib_set.untokenized_calibration_set is not None
+            calib_set._untokenized_calibration_set is not None
         ), "CalibrationSet should have untokenized data"
         assert (
-            len(calib_set.untokenized_calibration_set) > 0
+            len(calib_set._untokenized_calibration_set) > 0
         ), "CalibrationSet should have data samples"
         print(
             "\n✅ CalibrationSet correctly processes data with arbitrary column names"

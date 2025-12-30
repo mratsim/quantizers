@@ -218,22 +218,38 @@ class CalibrationSet:
     - Same cached dataset should be usable across different quantization configurations
     """
 
-    def __init__(self, config: CalibrationSetConfig, cache_dir: str = "./cache"):
+    def __init__(
+        self,
+        config: CalibrationSetConfig,
+        cache_dir: str = "./cache",
+        _from_factory: bool = False,
+    ):
         """Initialize CalibrationSet.
 
         Args:
             config: CalibrationSetConfig to initialize with.
             cache_dir: Directory to cache calibration sets.
+            _from_factory: Internal flag to indicate creation from factory method.
+
+        Raises:
+            RuntimeError: If CalibrationSet is instantiated directly instead of using factory methods.
+
+        Note:
+            Users should use CalibrationSet.from_config() or CalibrationSet.from_cache()
+            instead of directly instantiating this class.
         """
+        if not _from_factory:
+            raise RuntimeError(
+                "CalibrationSet should not be instantiated directly. "
+                "Use CalibrationSet.from_config() or CalibrationSet.from_cache() instead."
+            )
+
         self.config = config
         self.cache_dir = Path(cache_dir)
-        self.untokenized_calibration_set = None
+        self._untokenized_calibration_set = None
 
         # Ensure cache directory exists
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-        # Validate config
-        self.config.validate()
 
     @staticmethod
     def is_cached(config: "CalibrationSetConfig", cache_dir: str = "./cache") -> bool:
@@ -245,7 +261,13 @@ class CalibrationSet:
 
         Returns:
             bool: True if cached data exists and matches config, False otherwise.
+
+        Raises:
+            ValueError: If the configuration is invalid.
         """
+        # Validate configuration first
+        config.validate()
+
         cache_key = CalibrationSet.compute_cache_key(config)
         cache_path = Path(cache_dir) / cache_key
         return cache_path.exists()
@@ -263,8 +285,15 @@ class CalibrationSet:
         Returns:
             CalibrationSet instance if cached data exists and matches config.
             This does not load the dataset into memory - use get_tokenized() for that.
+
+        Raises:
+            ValueError: If the configuration is invalid.
         """
-        instance = cls(config, cache_dir)
+        # Validate configuration first
+        config.validate()
+
+        # Create instance using constructor with factory flag
+        instance = cls(config, cache_dir, _from_factory=True)
 
         # Try to load from cache
         cache_key = CalibrationSet.compute_cache_key(config)
@@ -280,7 +309,7 @@ class CalibrationSet:
                 if len(dataset) == 0:
                     logging.warning(f"Cache found but empty: {cache_path}")
                 else:
-                    instance.untokenized_calibration_set = dataset
+                    instance._untokenized_calibration_set = dataset
             except Exception as e:
                 logging.warning(f"Failed to load cache file {cache_path}: {e}")
 
@@ -302,8 +331,15 @@ class CalibrationSet:
 
         Returns:
             CalibrationSet instance with loaded and consolidated dataset (untokenized).
+
+        Raises:
+            ValueError: If the configuration is invalid.
         """
-        instance = cls(config, cache_dir)
+        # Validate configuration first
+        config.validate()
+
+        # Create instance using constructor with factory flag
+        instance = cls(config, cache_dir, _from_factory=True)
 
         # Build the dataset from raw data (without tokenization)
         instance._consolidate_datasets()
@@ -426,7 +462,7 @@ class CalibrationSet:
         if self.config.shuffle:
             result = result.shuffle(seed=self.config.seed)
 
-        self.untokenized_calibration_set = result
+        self._untokenized_calibration_set = result
         return result
 
     def _tokenize_row(self, row, tokenizer) -> Dict[str, Any]:
@@ -467,7 +503,7 @@ class CalibrationSet:
         Returns:
             HuggingFace Dataset with tokenized calibration data.
         """
-        if self.untokenized_calibration_set is None:
+        if self._untokenized_calibration_set is None:
             raise RuntimeError(
                 "Calibration dataset is not loaded. "
                 "Use CalibrationSet.from_cache() with cached data or "
@@ -475,10 +511,10 @@ class CalibrationSet:
             )
 
         # Apply tokenization to the entire dataset
-        tokenized_dataset = self.untokenized_calibration_set.map(
+        tokenized_dataset = self._untokenized_calibration_set.map(
             lambda row: self._tokenize_row(row, tokenizer=tokenizer),
             batched=False,
-            remove_columns=self.untokenized_calibration_set.column_names,
+            remove_columns=self._untokenized_calibration_set.column_names,
         )
 
         return tokenized_dataset
@@ -490,22 +526,22 @@ class CalibrationSet:
         Returns:
             int: Number of samples, or 0 if dataset is not loaded.
         """
-        if self.untokenized_calibration_set is None:
+        if self._untokenized_calibration_set is None:
             return 0
-        return len(self.untokenized_calibration_set)
+        return len(self._untokenized_calibration_set)
 
     def save_to_cache(self) -> None:
         """Save calibration set to cache.
 
-        Saves the current untokenized_calibration_set to the cache.
+        Saves the current _untokenized_calibration_set to the cache.
         """
-        if self.untokenized_calibration_set is None:
+        if self._untokenized_calibration_set is None:
             raise RuntimeError(
                 "No calibration dataset to save. "
                 "Ensure dataset is available before calling save_to_cache()."
             )
 
-        if len(self.untokenized_calibration_set) == 0:
+        if len(self._untokenized_calibration_set) == 0:
             logging.warning("Cannot save empty dataset to cache")
             return
 
@@ -519,7 +555,7 @@ class CalibrationSet:
         try:
             logging.info(f"Saving to cache: {cache_path}")
             # Use Dataset.to_parquet to save directly as Parquet
-            self.untokenized_calibration_set.to_parquet(str(cache_path))
+            self._untokenized_calibration_set.to_parquet(str(cache_path))
 
             # Update total_num_samples is now a property, no need to set it
         except Exception as e:
