@@ -1,0 +1,125 @@
+name: CI Check
+on:
+  merge_group:
+  pull_request:
+  push:
+    branches:
+      - master
+env:
+  PYTHON_VERSION: '3.12'
+
+# Jobs launched for a PR event cancel the ongoing one for the same workflow + PR,
+# Only retries (of the same run) for a Push event cancel the prior one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    if: github.event.pull_request.draft == false
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest
+      - name: Run Ruff linting
+        run: |
+          ruff check . --format=github
+      - name: Run Flake8
+        run: |
+          python -m pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  type-check:
+    if: github.event.pull_request.draft == false
+    name: Type Checking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install MyPy
+        run: |
+          python -m pip install mypy
+      - name: Run type checking
+        run: |
+          mypy src/
+        continue-on-error: true
+
+  test:
+    if: github.event.pull_request.draft == false
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-cov
+      - name: Run tests
+        run: |
+          pytest tests/ --cov=src/ --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  format:
+    if: github.event.pull_request.draft == false
+    name: Code Formatting Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install black
+        run: |
+          python -m pip install black
+      - name: Check formatting
+        run: |
+          black --check --diff .
+        continue-on-error: true
+
+  security:
+    if: github.event.pull_request.draft == false
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install safety and bandit
+        run: |
+          python -m pip install safety bandit
+      - name: Check for security vulnerabilities
+        run: safety check
+      - name: Run Bandit security linter
+        run: bandit -r src/
+
+  typos:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use typos with default config
+        uses: crate-ci/typos@v1
+        continue-on-error: true
