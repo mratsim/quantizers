@@ -90,20 +90,17 @@ def test_sharegpt_formatter_field_validation():
     print("\n=== Testing ShareGPT Formatter Field Validation ===")
     
     # Test with empty conversations list
-    try:
-        DatasetFmt.sharegpt(["messages"], {"messages": []})
-        assert True, "Should handle empty conversations list gracefully"
-        print("✅ ShareGPT formatter correctly handles empty conversations list")
-    except Exception as e:
-        assert False, f"Should not raise exception for empty conversations: {e}"
+    result = DatasetFmt.sharegpt(["messages"], {"messages": []})
+    assert result == [], "Should handle empty conversations list gracefully"
+    print("✅ ShareGPT formatter correctly handles empty conversations list")
     
-    # Test with missing column
+    # Test with missing column - should raise KeyError
     try:
         DatasetFmt.sharegpt(["nonexistent_column"], {"messages": []})
-        assert True, "Should handle missing column gracefully"
-        print("✅ ShareGPT formatter correctly handles missing column")
-    except Exception as e:
-        assert False, f"Should not raise exception for missing column: {e}"
+        assert False, "Should raise KeyError for missing column"
+    except KeyError:
+        pass  # Expected behavior
+    print("✅ ShareGPT formatter correctly raises KeyError for missing column")
     
     # Test with proper conversations data
     mock_data = {
@@ -324,10 +321,10 @@ def test_formatter_column_count_handling():
     print("\n=== Testing Formatter Column Count Handling ===")
     
     # Test data for different formatter types
-    sharegpt_data = {"conversations": [{"from": "user", "value": "Hello"}]}
-    raw_text_data = {"text": "This is raw text"}
-    prompt_answer_data = {"prompt": "Question", "answer": "Response"}
-    chat_completion_data = {"messages": [{"role": "user", "content": "Hello"}]}
+    sharegpt_data = {"col": [{"from": "user", "value": "Hello"}]}
+    raw_text_data = {"col": "This is raw text"}
+    prompt_answer_data = {"col1": "Question", "col2": "Response"}
+    chat_completion_data = {"col": [{"role": "user", "content": "Hello"}]}
     
     # Test that all formatters work with single column
     print("✅ Single column handling:")
@@ -353,7 +350,7 @@ def test_formatter_column_count_handling():
         
     # Test that prompt-answer requires exactly 2 columns
     try:
-        DatasetFmt.prompt_answer(["col"], prompt_answer_data)
+        DatasetFmt.prompt_answer(["col1"], prompt_answer_data)
         assert False, "Expected ValueError for prompt-answer with single column"
     except ValueError as e:
         assert "exactly 2 columns" in str(e)
