@@ -1,0 +1,26 @@
+[
+  {
+    "prompt": "What is the chemical symbol for gold?",
+    "answer": "The chemical symbol for gold is Au.",
+    "metadata": "science question",
+    "timestamp": "2023-04-01T00:00:00Z",
+    "source": "chemistry",
+    "difficulty": "easy"
+  },
+  {
+    "prompt": "Explain the concept of supply and demand in economics.",
+    "answer": "Supply refers to the quantity of a good that producers are willing to sell at various prices. Demand refers to the quantity of a good that consumers are willing to buy at various prices. When supply exceeds demand, prices tend to fall. When demand exceeds supply, prices tend to rise. This relationship creates a market equilibrium where supply equals demand.",
+    "metadata": "economics explanation",
+    "timestamp": "2023-04-02T00:00:00Z",
+    "source": "economics",
+    "difficulty": "medium"
+  },
+  {
+    "prompt": "How does the human immune system work?",
+    "answer": "The human immune system is a complex network of cells, tissues, and organs that work together to defend the body against harmful invaders like bacteria, viruses, and parasites. It has two main components: the innate immune system (which provides immediate, general defense) and the adaptive immune system (which provides specific, targeted defense that improves with exposure). Key players include white blood cells, antibodies, lymph nodes, the spleen, and bone marrow.",
+    "metadata": "biology explanation",
+    "timestamp": "2023-04-03T00:00:00Z",
+    "source": "biology",
+    "difficulty": "hard"
+  }
+]

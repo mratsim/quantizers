@@ -1,0 +1,120 @@
+name: CI Check
+on:
+  merge_group:
+  pull_request:
+  push:
+    branches:
+      - master
+env:
+  PYTHON_VERSION: "3.12"
+
+# Jobs launched for a PR event cancel the ongoing one for the same workflow + PR,
+# Only retries (of the same run) for a Push event cancel the prior one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    if: github.event.pull_request.draft == false
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest
+      - name: Run Ruff linting
+        run: |
+          ruff check . --exclude=scripts/old_scripts
+
+  type-check:
+    if: github.event.pull_request.draft == false
+    name: Type Checking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install MyPy
+        run: |
+          python -m pip install mypy
+      - name: Run type checking
+        run: |
+          mypy src/ --exclude='scripts/old_scripts/.*'
+
+  test:
+    if: github.event.pull_request.draft == false
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-cov
+      - name: Run tests
+        run: |
+          pytest tests/ --cov=src/ --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  format:
+    if: github.event.pull_request.draft == false
+    name: Code Formatting Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install ruff-format
+        run: |
+          python -m pip install ruff
+      - name: Check formatting
+        run: |
+          ruff format --check . --exclude=scripts/old_scripts
+
+  security:
+    if: github.event.pull_request.draft == false
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install bandit
+        run: |
+          python -m pip install bandit
+      - name: Run Bandit security linter
+        run: bandit -r src/ -ll -x tests/ -s B101
+
+  typos:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use typos with default config
+        uses: crate-ci/typos@v1

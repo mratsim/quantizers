@@ -1,0 +1,11 @@
+# Configuration for quantizing Qwen3-4B with AWQ
+# Usage: python scripts/do_oneshot.py --config configs/test-quantize_qwen3-4b-awq.yaml
+
+model:
+  name: "Qwen/Qwen3-4B"
+  revision: "main"
+
+quantization:
+  recipe: "recipes/recipe_awq_w4a16.yaml"
+
+calibration_set: "configs/calibration_sets/calibrate_multi_format_test.yaml"

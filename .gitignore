@@ -6,9 +6,22 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
+# Devops
 .venv
+uv.lock
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
 # llmcompressor
 sparse_logs/
 collect_env.py
+
+# Artifacts
+cache/
+outputs/
+logs/
+
+# Cache files
+tests/test_cache/*.parquet

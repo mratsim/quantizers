@@ -1,0 +1,31 @@
+calibration_set:
+  max_seq_length: 8192
+  shuffle: true
+  seed: 42
+  datasets:
+    - dataset: "neuralmagic/calibration"
+      subset: "LLM"
+      split: "train"
+      columns: ["messages"]
+      formatter: "chat_completion"
+      num_samples: 3
+    - dataset: "PJMixers/grimulkan_theory-of-mind-ShareGPT"
+      split: "train"
+      columns: ["conversations"]
+      formatter: "sharegpt"
+      num_samples: 3
+    - dataset: "ruggsea/stanford-encyclopedia-of-philosophy_instruct"
+      split: "train"
+      columns: ["question", "answer"]
+      formatter: "prompt_answer"
+      num_samples: 3
+    - dataset: "fka/awesome-chatgpt-prompts"
+      split: "train"
+      columns: ["prompt"]
+      formatter: "raw_text"
+      num_samples: 3
+    - dataset: "sam-paech/gutenberg3-generalfiction-scifi-fantasy-romance-adventure-dpo"
+      split: "train"
+      columns: ["chosen"]
+      formatter: "chat_completion"
+      num_samples: 3

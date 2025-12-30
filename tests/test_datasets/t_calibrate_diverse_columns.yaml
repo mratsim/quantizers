@@ -1,0 +1,30 @@
+calibration_set:
+  max_seq_length: 8192
+  shuffle: true
+  seed: 42
+  datasets:
+    - dataset: tests/test_datasets/sharegpt/ds_musings
+      split: train
+      columns: ["musings"]
+      formatter: sharegpt
+      num_samples: 3
+    - dataset: tests/test_datasets/sharegpt/ds_conversations
+      split: train
+      columns: ["conversations"]
+      formatter: sharegpt
+      num_samples: 3
+    - dataset: tests/test_datasets/prompt_answer/ds_instruction_response
+      split: train
+      columns: ["instruction", "response"]
+      formatter: prompt_answer
+      num_samples: 3
+    - dataset: tests/test_datasets/raw_text/ds_text
+      split: train
+      columns: ["text"]
+      formatter: raw_text
+      num_samples: 3
+    - dataset: tests/test_datasets/chat_completion/ds_messages
+      split: train
+      columns: ["messages"]
+      formatter: chat_completion
+      num_samples: 3

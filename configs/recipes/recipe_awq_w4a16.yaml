@@ -1,0 +1,32 @@
+# quantizers/configs/recipes/recipe_awq_w4a16.yaml
+#
+# AWQ (Activation-Aware Weight Quantization) recipe for 4-bit weights.
+# Targets MLP and Attention projections for quantization.
+# Ignores lm_head by default.
+
+quantization_scheme:
+  type: W4A16
+  targets: ["Linear"]
+
+modifiers:
+  - name: AWQModifier
+    config_groups:
+      group_0:
+        targets: ["Linear"]
+        weights:
+          num_bits: 4
+          type: int
+          symmetric: true
+          group_size: 32
+          strategy: group
+          dynamic: false
+          # actorder: group
+          observer: mse
+
+    # Layers to exclude from quantization
+    ignore:
+      - "lm_head"
+
+    # Scaling options
+    duo_scaling: true
+    # offload_device: "cpu"
