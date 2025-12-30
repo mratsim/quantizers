@@ -558,6 +558,77 @@ def test_edge_cases():
     print("✅ Edge cases test passed")
 
 
+def test_invalid_jinja_template():
+    """Test that invalid Jinja templates (list size < modulus) raise errors."""
+    print("\n=== Testing Invalid Jinja Template ===")
+
+    # Create a config with an invalid template (index out of bounds)
+    try:
+        config = CalibrationSetConfig(
+            max_seq_length=4096,
+            shuffle=False,
+            seed=42,
+            datasets=[
+                DatasetEntryConfig(
+                    dataset=str(Path(__file__).parent / "test_datasets" / "diversoailab_humaneval_rust"),
+                    split="train",
+                    columns=["prompt"],
+                    formatter="raw_text",
+                    num_samples=2,
+                    formatter_params={
+                        # This has 5 elements but uses % 10, which will cause index errors
+                        "prefix": "Solve the following problem using {{ ['Python', 'Rust', 'JavaScript', 'Java', 'C++'][hash(row|string) % 10] }}"  # noqa E501
+                    },
+                )
+            ],
+        )
+
+        # This should raise a ValueError about the list size
+        _calib_set = CalibrationSet.from_config(config, "test_cache")
+        assert False, "Expected ValueError for invalid Jinja template"
+
+    except ValueError as e:
+        if "List index error" in str(e):
+            print(f"✅ Correctly caught validation error: {e}")
+        else:
+            raise AssertionError(f"Expected 'List index error' in ValueError message, got: {e}")
+    except Exception as e:
+        raise AssertionError(f"Expected ValueError, got {type(e).__name__}: {e}")
+
+
+def test_valid_jinja_template():
+    """Test that valid Jinja templates work correctly."""
+    print("\n=== Testing Valid Jinja Template ===")
+
+    # Create a config with a valid template
+    try:
+        config = CalibrationSetConfig(
+            max_seq_length=4096,
+            shuffle=False,
+            seed=42,
+            datasets=[
+                DatasetEntryConfig(
+                    dataset=str(Path(__file__).parent / "test_datasets" / "diversoailab_humaneval_rust"),
+                    split="train",
+                    columns=["prompt"],
+                    formatter="raw_text",
+                    num_samples=2,
+                    formatter_params={
+                        # This has 5 elements correctly uses % 5
+                        "prefix": "Solve the following problem using {{ ['Python', 'Rust', 'JavaScript', 'Java', 'C++'][hash(row|string) % 5] }}"  # noqa E501
+                    },
+                )
+            ],
+        )
+
+        # This should work fine
+        _calib_set = CalibrationSet.from_config(config, "test_cache")
+        print("✅ Valid template processed correctly")
+
+    except Exception as e:
+        raise AssertionError(f"Unexpected exception with valid template: {type(e).__name__}: {e}")
+
+
 if __name__ == "__main__":
     print("🔍 Running calibration sets tests...")
 
@@ -571,6 +642,8 @@ if __name__ == "__main__":
         test_dataset_entry_config_requirements()
         test_invalid_calibration_set_config()
         test_edge_cases()
+        test_invalid_jinja_template()
+        test_valid_jinja_template()
 
         print("\n🎉 All calibration sets tests passed!")
     except Exception as e:

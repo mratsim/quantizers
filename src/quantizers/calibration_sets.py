@@ -13,6 +13,7 @@ import dataclasses
 import hashlib
 import json
 import logging
+import re
 from dataclasses import field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -511,6 +512,26 @@ class CalibrationSet:
             # Helper function to render Jinja templates
             def render_template(template_str, row):
                 try:
+                    # Check for potential list index errors in Jinja template
+                    if "[hash(row|string)" in template_str and "]" in template_str:
+                        # Extract the modulus value from the template
+                        modulus_match = re.search(r"\[hash\(row\|string\)\s*%\s*(\d+)\]", template_str)
+                        if modulus_match:
+                            modulus_val = int(modulus_match.group(1))
+
+                            # Find the list to check its length
+                            list_match = re.search(r"(\[.*?\])\s*\[hash\(row\|string\)\s*%\s*\d+\]", template_str)
+                            if list_match:
+                                list_str = list_match.group(1)
+                                # Count elements in the list
+                                elements = [item.strip() for item in list_str.strip("[]").split(",") if item.strip()]
+                                if len(elements) < modulus_val:
+                                    raise ValueError(
+                                        f"List index error: Template has list with {len(elements)} elements "
+                                        f"but uses modulus {modulus_val}, which can cause index errors at runtime. "
+                                        f"Either increase the list size or decrease the modulus value."
+                                    )
+
                     template = jinja_env.from_string(template_str)
                     return template.render(row=row)
                 except Exception as e:

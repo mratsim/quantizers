@@ -229,10 +229,6 @@ def test_yaml_anchor_config():
 
         # Check that all datasets are using the same template content
         # Validate the language list structure
-        import re
-
-        language_list_match = re.search(r"\[([^\]]+)\]", prefix)
-        assert language_list_match, "Could not find language list in template"
 
         # Validate that all datasets use the same template
         for ds in config.datasets:
@@ -252,22 +248,27 @@ def test_yaml_anchor_config():
         languages_str = language_list_match.group(1)
         languages = [lang.strip().strip("'\"") for lang in languages_str.split(",")]
         assert len(languages) == 60, f"Should have exactly 60 languages, got {len(languages)}"
-        assert "Python" in languages, "Should contain Python"
-        assert "JavaScript" in languages, "Should contain JavaScript"
-        assert "Rust" in languages, "Should contain Rust"
-        assert "Java" in languages, "Should contain Java"
-        assert "C++" in languages, "Should contain C++"
-        assert "Lean" in languages, "Should contain Lean"
-        assert "Coq" in languages, "Should contain Coq"
-        assert "SML" in languages, "Should contain SML"
-        assert "Agda" in languages, "Should contain Agda"
-        assert "Idris" in languages, "Should contain Idris"
-        assert "Racket" in languages, "Should contain Racket"
-        assert "x86-64 ASM" in languages, "Should contain x86-64 ASM"
-        assert "ARM-64 ASM" in languages, "Should contain ARM-64 ASM"
-        assert "CUDA" in languages, "Should contain CUDA"
-        assert "Vulkan" in languages, "Should contain Vulkan"
-        assert "Metal" in languages, "Should contain Metal"
+
+        expected_languages = [
+            "Python",
+            "JavaScript",
+            "Rust",
+            "Java",
+            "C++",
+            "Lean",
+            "Coq",
+            "SML",
+            "Agda",
+            "Idris",
+            "Racket",
+            "x86-64 ASM",
+            "ARM-64 ASM",
+            "CUDA",
+            "Vulkan",
+            "Metal",
+        ]
+        for lang in expected_languages:
+            assert lang in languages, f"Should contain {lang}"
 
         print(f"✅ Template contains {len(languages)} languages")
 
