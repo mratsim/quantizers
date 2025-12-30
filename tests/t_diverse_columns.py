@@ -66,7 +66,7 @@ class MockTokenizer:
 
 def test_load_diverse_columns_calibration_set():
     """Test loading a calibration set with diverse column structures from YAML."""
-    cache_dir = str(Path(__file__).parent) / "test_cache"
+    cache_dir = str(Path(__file__).parent / "test_cache")
 
     # Clear any existing cache
     import shutil
