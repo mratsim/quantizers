@@ -6,11 +6,10 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
+# Devops
 .venv
-
-# lockfile
 uv.lock
+.coverage
 
 # llmcompressor
 sparse_logs/
