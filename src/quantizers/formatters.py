@@ -13,7 +13,7 @@ The formatters should use these column names to find the relevant data they need
 """
 
 import logging
-from typing import Any, Callable, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class DatasetFmt:
@@ -116,7 +116,7 @@ class DatasetFmt:
         return data[columns[0]]
 
     @staticmethod
-    def get_formatter(formatter_name: str) -> Callable:
+    def get_formatter(formatter_name: str) -> Any:
         """
         Get the appropriate formatter function by name.
 
@@ -143,15 +143,17 @@ class DatasetFmt:
         return formatters[formatter_name]
 
     @staticmethod
-    def raw_text(columns: List[str], data: Dict[str, Any]) -> List[Dict[str, str]]:
+    def raw_text(columns: List[str], data: Dict[str, Any], prefix: Optional[str] = None) -> List[Dict[str, str]]:
         """
-        Convert raw text to assistant-turn format.
+        Convert raw text to assistant-turn format with optional prefix.
 
         Extracts text from the specified column and formats it as an assistant response.
+        If a prefix is provided, adds it as a user message before the text.
 
         Args:
             columns: Names of the columns containing the text data
             data: Extracted data from the dataset
+            prefix: Optional prefix text to add as a user message
 
         Returns:
             List of message dict with "role" and "content" keys
@@ -162,7 +164,16 @@ class DatasetFmt:
         # Extract text from the arbitrary column - mandatory column
         text_content = data[columns[0]]
 
-        return [{"role": "assistant", "content": text_content}]
+        messages = []
+
+        # Add prefix as user message if provided
+        if prefix:
+            messages.append({"role": "user", "content": prefix})
+
+        # Add text content as assistant response
+        messages.append({"role": "assistant", "content": text_content})
+
+        return messages
 
     @staticmethod
     def deepmind_code_contests(columns: List[str], data: Dict[str, Any]) -> List[Dict[str, str]]:

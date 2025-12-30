@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import yaml  # type: ignore
 from datasets import Dataset, concatenate_datasets, load_dataset
+from jinja2 import Environment, StrictUndefined
 
 from .formatters import DatasetFmt
 
@@ -40,6 +41,7 @@ class DatasetEntryConfig:
     Optional fields:
     - subset: Dataset subset (optional, None for no subset)
     - streaming: Whether to use streaming when loading (optional, default False)
+    - formatter_params: Additional parameters to pass to the formatter (optional)
     """
 
     def __init__(
@@ -51,6 +53,7 @@ class DatasetEntryConfig:
         columns: Optional[List[str]] = None,
         num_samples: Optional[Union[int, str]] = None,
         streaming: bool = False,
+        formatter_params: Optional[Dict[str, Any]] = None,
     ):
         self.dataset = dataset
         self.split = split
@@ -59,6 +62,7 @@ class DatasetEntryConfig:
         self.formatter = formatter
         self.num_samples = num_samples
         self.streaming = streaming
+        self.formatter_params = formatter_params or {}
         self.validate()
 
     @classmethod
@@ -88,6 +92,7 @@ class DatasetEntryConfig:
             raise ValueError("num_samples must be a positive integer or 'all'")
 
         streaming = data.get("streaming", False)
+        formatter_params = data.get("formatter_params", {})
 
         return cls(
             dataset=dataset,
@@ -97,6 +102,7 @@ class DatasetEntryConfig:
             formatter=formatter,
             num_samples=num_samples,
             streaming=streaming,
+            formatter_params=formatter_params,
         )
 
     def validate(self) -> None:
@@ -474,9 +480,58 @@ class CalibrationSet:
             # Apply formatter function
             formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
 
+            # Setup Jinja environment for template rendering with Python built-ins
+            jinja_env = Environment(undefined=StrictUndefined, autoescape=True)
+            # Add Python built-ins to Jinja context
+            jinja_env.globals.update(
+                {
+                    "hash": hash,
+                    "len": len,
+                    "abs": abs,
+                    "max": max,
+                    "min": min,
+                    "sum": sum,
+                    "sorted": sorted,
+                    "enumerate": enumerate,
+                    "zip": zip,
+                }
+            )
+
+            # Process formatter parameters that might contain Jinja templates
+            processed_params = {}
+            if ds_config.formatter_params:
+                for key, value in ds_config.formatter_params.items():
+                    if isinstance(value, str) and "{{" in value and "}}" in value:
+                        # This is a Jinja template, render it later
+                        processed_params[key] = value
+                    else:
+                        processed_params[key] = value
+
+            # Helper function to render Jinja templates
+            def render_template(template_str, row):
+                try:
+                    template = jinja_env.from_string(template_str)
+                    return template.render(row=row)
+                except Exception as e:
+                    logging.warning(f"Failed to render Jinja template: {e}")
+                    return template_str
+
             # Apply formatting directly using named function to avoid lambda variable capture issues
+            # Pass formatter parameters if they exist
             def apply_formatter(row):
-                result = formatter_func(ds_config.columns, row)
+                # Render any Jinja templates in the parameters
+                rendered_params = {}
+                for key, value in processed_params.items():
+                    if isinstance(value, str) and "{{" in value and "}}" in value:
+                        rendered_value = render_template(value, row)
+                        rendered_params[key] = rendered_value
+                    else:
+                        rendered_params[key] = value
+
+                if rendered_params:
+                    result = formatter_func(ds_config.columns, row, **rendered_params)
+                else:
+                    result = formatter_func(ds_config.columns, row)
                 return {"formatted": result}
 
             dataset = dataset.map(

@@ -3,6 +3,7 @@ calibration_set:
   shuffle: true
   seed: 42
   datasets:
+    # Original datasets with streaming support for fast loading
     - dataset: deepmind/code_contests
       split: valid
       columns: ["name"]
@@ -28,3 +29,47 @@ calibration_set:
       formatter: chat_completion
       num_samples: 1
       streaming: true
+
+    # Stack Rust dataset with code explanation
+    - dataset: ammarnasr/the-stack-rust-clean
+      split: train
+      columns: ["content"]
+      formatter: raw_text
+      num_samples: 5
+      formatter_params:
+        prefix: "explain this code"
+
+    # Humaneval Rust datasets with static language selection
+    - dataset: diversoailab/humaneval-rust
+      split: test
+      columns: ["prompt"]
+      formatter: raw_text
+      num_samples: 3
+      formatter_params:
+        prefix: "Solve the following problem using Python"
+
+    - dataset: diversoailab/humaneval-rust
+      split: test
+      columns: ["prompt"]
+      formatter: raw_text
+      num_samples: 3
+      formatter_params:
+        prefix: "Solve the following problem using JavaScript"
+
+    - dataset: diversoailab/humaneval-rust
+      split: test
+      columns: ["prompt"]
+      formatter: raw_text
+      num_samples: 3
+      formatter_params:
+        prefix: "Solve the following problem using Java"
+
+    # Humaneval Rust with Jinja templating for diverse language selection
+    - dataset: diversoailab/humaneval-rust
+      split: test
+      columns: ["prompt"]
+      formatter: raw_text
+      num_samples: 10
+      formatter_params:
+        # Randomly select from 50 programming languages using the row's hash for consistency
+        prefix: "Solve the following problem using {{ ['Zephyr', 'Prolog', 'Cobol', 'Apex', 'Crystal', 'Fortran', 'Nim', 'Delphi', 'Ada', 'Objective-C', 'VBA', 'Perl', 'Groovy', 'MATLAB', 'Solidity', 'Visual Basic', 'MicroPython', 'OCaml', 'Erlang', 'Julia', 'Lisp', 'F#', 'Clojure', 'GDScript', 'Scala', 'R', 'Haskell', 'Ruby', 'Elixir', 'Assembly', 'Lua', 'Zig', 'Dart', 'Swift', 'PowerShell', 'PHP', 'Kotlin', 'C', 'Java', 'C++', 'C#', 'Bash/Shell', 'Go', 'Rust', 'TypeScript', 'HTML/CSS', 'SQL', 'JavaScript'][hash(row|string) % 50] }}"
