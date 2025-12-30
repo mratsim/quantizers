@@ -22,6 +22,9 @@ from datasets import Dataset, concatenate_datasets, load_dataset
 
 from .formatters import DatasetFmt
 
+# Default sample limit for streaming datasets when "all" is requested
+STREAMING_DEFAULT_SAMPLE_LIMIT = 256
+
 
 @dataclasses.dataclass
 class DatasetEntryConfig:
@@ -36,6 +39,7 @@ class DatasetEntryConfig:
 
     Optional fields:
     - subset: Dataset subset (optional, None for no subset)
+    - streaming: Whether to use streaming when loading (optional, default False)
     """
 
     def __init__(
@@ -46,6 +50,7 @@ class DatasetEntryConfig:
         subset: Optional[str] = None,
         columns: Optional[List[str]] = None,
         num_samples: Optional[Union[int, str]] = None,
+        streaming: bool = False,
     ):
         self.dataset = dataset
         self.split = split
@@ -53,6 +58,7 @@ class DatasetEntryConfig:
         self.columns = columns or []
         self.formatter = formatter
         self.num_samples = num_samples
+        self.streaming = streaming
         self.validate()
 
     @classmethod
@@ -81,13 +87,16 @@ class DatasetEntryConfig:
         elif not (isinstance(num_samples, int) and num_samples > 0):
             raise ValueError("num_samples must be a positive integer or 'all'")
 
+        streaming = data.get("streaming", False)
+
         return cls(
             dataset=dataset,
-            formatter=formatter,
             split=split,
             subset=subset,
             columns=columns,
+            formatter=formatter,
             num_samples=num_samples,
+            streaming=streaming,
         )
 
     def validate(self) -> None:
@@ -111,22 +120,36 @@ class DatasetEntryConfig:
 
         Args:
             dataset_name: Name of the dataset for logging.
-            dataset: HuggingFace Dataset to get actual size from.
+            dataset: HuggingFace Dataset or IterableDataset to get actual size from.
 
         Returns:
             int: Resolved number of samples.
         """
-        actual_size = len(dataset)
+        # For streaming datasets, we can't get length, so use requested number directly
+        try:
+            actual_size = len(dataset)
+        except TypeError:
+            # Streaming IterableDataset has no len()
+            actual_size = None
 
-        # If "all" was requested, use all samples
+        # If "all" was requested but we can't determine size (streaming), use a default
         if isinstance(self.num_samples, str) and self.num_samples == "all":
-            requested_num = actual_size
+            if actual_size is not None:
+                requested_num = actual_size
+            else:
+                # For streaming datasets with "all", set to a reasonable default
+                requested_num = STREAMING_DEFAULT_SAMPLE_LIMIT
+                log = logging.getLogger(__name__)
+                log.info(
+                    f"Using default sample count of {requested_num} for streaming "
+                    f"dataset {dataset_name} ('all' requested but length unknown)"
+                )
         else:
             # Use the requested number if it's a positive integer
             requested_num = int(self.num_samples if self.num_samples is not None else 0)
 
-        # Cap at actual dataset size if requested exceeds what's available
-        if requested_num > actual_size:
+        # Cap at actual dataset size if requested exceeds what's available (only for non-streaming)
+        if actual_size is not None and requested_num > actual_size:
             log = logging.getLogger(__name__)
             log.warning(
                 f"Requested {requested_num} samples from {dataset_name}, "
@@ -425,19 +448,21 @@ class CalibrationSet:
                 if ds_config.subset is not None:
                     # nosec B615, B703
                     dataset = load_dataset(  # nosec
-                        ds_config.dataset, ds_config.subset, split=ds_config.split
+                        ds_config.dataset, ds_config.subset, split=ds_config.split, streaming=ds_config.streaming
                     )
                 else:
                     # nosec B615, B703
                     dataset = load_dataset(  # nosec
-                        ds_config.dataset, split=ds_config.split
+                        ds_config.dataset, split=ds_config.split, streaming=ds_config.streaming
                     )
             else:
                 # Handle cases where dataset is a tuple of multiple arguments
                 # nosec B615, B703
-                dataset = load_dataset(  # nosec
-                    *ds_config.dataset, split=ds_config.split
-                )
+                args = [ds_config.dataset[0]]
+                if ds_config.subset is not None:
+                    args.append(ds_config.subset)
+                args.append({"split": ds_config.split, "streaming": ds_config.streaming})
+                dataset = load_dataset(*args)  # nosec
 
             # Resolve number of samples based on actual dataset size
             num_samples = ds_config.resolve_num_samples(ds_config.dataset, dataset)
@@ -445,9 +470,6 @@ class CalibrationSet:
             # Filter to number of samples requested
             if ds_config.num_samples != "all":
                 dataset = dataset.filter(lambda e, i: i < num_samples, with_indices=True)
-
-            # Apply formatter function
-            formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
 
             # Apply formatter function
             formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
@@ -461,6 +483,29 @@ class CalibrationSet:
                 apply_formatter,
                 remove_columns=dataset.column_names,
             )
+
+            # Convert streaming datasets to regular datasets to allow concatenation
+            if ds_config.streaming:
+                # For streaming datasets, take only the samples we need
+                if ds_config.num_samples != "all":
+                    # Take exactly the number of samples we need
+                    dataset = dataset.take(ds_config.num_samples)
+                else:
+                    # For "all" with streaming, take a reasonable default
+                    dataset = dataset.take(STREAMING_DEFAULT_SAMPLE_LIMIT)
+
+                # Convert iterable dataset to regular dataset by creating a list and then a Dataset
+                dataset = list(dataset)  # Collect all items
+                dataset = Dataset.from_dict({"formatted": [d["formatted"] for d in dataset]})
+            else:
+                # For non-streaming, ensure we have exactly the samples we need
+                is_int_sample = isinstance(ds_config.num_samples, int)
+                if is_int_sample and ds_config.num_samples != "all" and len(dataset) > ds_config.num_samples:  # type: ignore[operator, arg-type]
+                    # The mypy type ignore is intentional here because:
+                    # 1. `is_int_sample` ensures ds_config.num_samples is an int in this branch
+                    # 2. `ds_config.num_samples != "all"` is always true when num_samples is an int
+                    # 3. MyPy can't properly track the narrowed type after isinstance checks
+                    dataset = dataset.select(range(ds_config.num_samples))  # type: ignore[arg-type]
 
             # Store for later concatenation
             all_datasets.append(dataset)

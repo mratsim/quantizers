@@ -134,6 +134,7 @@ class DatasetFmt:
             "prompt_answer": DatasetFmt.prompt_answer,
             "chat_completion": DatasetFmt.chat_completion,
             "raw_text": DatasetFmt.raw_text,
+            "deepmind_code_contests": DatasetFmt.deepmind_code_contests,
         }
 
         if formatter_name not in formatters:
@@ -162,3 +163,52 @@ class DatasetFmt:
         text_content = data[columns[0]]
 
         return [{"role": "assistant", "content": text_content}]
+
+    @staticmethod
+    def deepmind_code_contests(columns: List[str], data: Dict[str, Any]) -> List[Dict[str, str]]:
+        """
+        Convert DeepMind Code Contests format to chat completion format.
+
+        This formatter creates a conversation between user (problem description) and assistant (solution code).
+
+        Args:
+            columns: Names of the columns containing the data
+            data: Extracted data from the dataset
+
+        Returns:
+            List of message dicts with "role" and "content" keys
+        """
+        # Enforce correct number of columns
+        if len(columns) != 1:
+            raise ValueError(f"DeepMind Code Contests format requires exactly 1 column, got {len(columns)}: {columns}")
+
+        # Check if the column value is the entire dataset row (like when using any column name)
+        # or just a part of it
+        row_data = data[columns[0]]
+
+        # If row_data is a string, it means we selected a column that just contains a string
+        # We need to use the entire data instead
+        if isinstance(row_data, str):
+            row_data = data
+
+        # Get the problem description
+        description = row_data.get("description", "")
+
+        # Get the first solution code
+        solutions = row_data.get("solutions", {})
+        solution_code = ""
+
+        if solutions and "solution" in solutions and len(solutions["solution"]) > 0:
+            solution_code = solutions["solution"][0]  # Take the first solution
+
+        messages = []
+
+        # Add problem description as user prompt
+        if description:
+            messages.append({"role": "user", "content": description})
+
+        # Add solution code as assistant response
+        if solution_code:
+            messages.append({"role": "assistant", "content": solution_code})
+
+        return messages

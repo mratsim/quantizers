@@ -28,3 +28,8 @@ calibration_set:
       columns: ["messages"]
       formatter: chat_completion
       num_samples: 3
+    - dataset: tests/test_datasets/deepmind_code_contests
+      split: train
+      columns: ["data"]
+      formatter: deepmind_code_contests
+      num_samples: 3

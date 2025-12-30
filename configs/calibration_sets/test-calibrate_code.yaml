@@ -1,0 +1,30 @@
+calibration_set:
+  max_seq_length: 8192
+  shuffle: true
+  seed: 42
+  datasets:
+    - dataset: deepmind/code_contests
+      split: valid
+      columns: ["name"]
+      formatter: deepmind_code_contests
+      num_samples: 3
+
+    - dataset: nvidia/OpenCodeInstruct
+      split: train
+      columns: ["input", "output"]
+      formatter: prompt_answer
+      num_samples: 3
+      streaming: true
+
+    - dataset: CSJianYang/CodeArena
+      split: test
+      columns: ["messages"]
+      formatter: chat_completion
+      num_samples: 3
+
+    - dataset: nvidia/Llama-Nemotron-Post-Training-Dataset
+      split: code
+      columns: ["input"]
+      formatter: chat_completion
+      num_samples: 1
+      streaming: true
