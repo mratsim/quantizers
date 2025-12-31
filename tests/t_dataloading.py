@@ -621,7 +621,7 @@ def test_toolace_format_loading():
             assert "content" in msg, "Message should have content"
 
             # Verify roles are valid
-            assert msg["role"] in ["system", "user", "assistant"], f"Invalid role: {msg['role']}"
+            assert msg["role"] in ["system", "user", "assistant", "tool"], f"Invalid role: {msg['role']}"
 
     print(f"✅ Loaded {len(untokenized_data)} ToolACE samples with system prompts")
 

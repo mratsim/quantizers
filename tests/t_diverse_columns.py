@@ -333,7 +333,7 @@ def test_toolace_diverse_columns():
         assert "content" in msg, "Message missing 'content' field"
 
         # Validate roles are valid
-        assert msg["role"] in ["system", "user", "assistant"], f"Invalid role: {msg['role']}"
+        assert msg["role"] in ["system", "user", "assistant", "tool"], f"Invalid role: {msg['role']}"
 
     # Verify at least one system message is present
     system_messages = [msg for msg in formatted if msg["role"] == "system"]
