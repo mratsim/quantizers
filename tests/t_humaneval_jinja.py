@@ -32,6 +32,11 @@ def test_humaneval_jinja_templates():
     assert "{{" in prefix and "}}" in prefix, "Should contain Jinja template"
 
     # Test template rendering
+    # Note: autoescape=True is kept as the default for security reasons. After evaluating
+    # the risks and benefits, we're keeping this setting as discussed in:
+    # https://github.com/mratsim/quantizers/pull/6#pullrequestreview-3619760720
+    # The current templates only contain language names (e.g., Python, C++, F#) which
+    # don't contain HTML special characters that would be escaped.
     jinja_env = Environment(undefined=StrictUndefined, autoescape=True)
     jinja_env.globals.update({"hash": hash})
 

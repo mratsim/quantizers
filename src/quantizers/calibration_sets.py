@@ -512,6 +512,11 @@ class CalibrationSet:
             formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
 
             # Setup Jinja environment for template rendering with Python built-ins
+            # Note: autoescape=True is kept as the default for security reasons. After evaluating
+            # the risks and benefits, we're keeping this setting as discussed in:
+            # https://github.com/mratsim/quantizers/pull/6#pullrequestreview-3619760720
+            # The current templates only contain language names (e.g., Python, C++, F#) which
+            # don't contain HTML special characters that would be escaped.
             jinja_env = Environment(undefined=StrictUndefined, autoescape=True)
             # Add Python built-ins to Jinja context
             jinja_env.globals.update(
