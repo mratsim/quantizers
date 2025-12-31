@@ -82,10 +82,6 @@ def test_jinja_templates():
 
         jinja_env = Environment()
 
-        # Simple hash function for testing
-        def custom_hash(s):
-            return hash(s) % 5
-
         mock_row = MockRow()
         template = jinja_env.from_string(valid_template)
         result = template.render(row=mock_row)

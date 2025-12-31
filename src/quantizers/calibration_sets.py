@@ -122,6 +122,35 @@ class DatasetEntryConfig:
         if not self.formatter:
             raise ValueError("formatter is required in calibration entry")
 
+        # Validate formatter_params that look like Jinja templates
+        if self.formatter_params:
+            for key, value in self.formatter_params.items():
+                if isinstance(value, str) and "{{" in value and "}}" in value:
+                    self._validate_template_modulus(value)
+
+    def _validate_template_modulus(self, template_str: str) -> None:
+        """Validate template modulus operations at config load time.
+
+        Args:
+            template_str: The template string to validate
+
+        Raises:
+            ValueError: If the template has a list index error
+        """
+        if "[hash(row|string)" in template_str and "]" in template_str:
+            modulus_match = re.search(r"\[hash\(row\|string\)\s*%\s*(\d+)\]", template_str)
+            if modulus_match:
+                modulus_val = int(modulus_match.group(1))
+                list_match = re.search(r"(\[.*?\])\s*\[hash\(row\|string\)\s*%\s*\d+\]", template_str)
+                if list_match:
+                    list_str = list_match.group(1)
+                    elements = [item.strip() for item in list_str.strip("[]").split(",") if item.strip()]
+                    if len(elements) < modulus_val:
+                        raise ValueError(
+                            f"List index error: Template has list with {len(elements)} elements "
+                            f"but uses modulus {modulus_val}, which can cause index errors at runtime."
+                        )
+
     def resolve_num_samples(self, dataset_name: str, dataset: Any) -> int:
         """Resolve num_samples based on actual dataset size.
 
@@ -512,26 +541,6 @@ class CalibrationSet:
             # Helper function to render Jinja templates
             def render_template(template_str, row):
                 try:
-                    # Check for potential list index errors in Jinja template
-                    if "[hash(row|string)" in template_str and "]" in template_str:
-                        # Extract the modulus value from the template
-                        modulus_match = re.search(r"\[hash\(row\|string\)\s*%\s*(\d+)\]", template_str)
-                        if modulus_match:
-                            modulus_val = int(modulus_match.group(1))
-
-                            # Find the list to check its length
-                            list_match = re.search(r"(\[.*?\])\s*\[hash\(row\|string\)\s*%\s*\d+\]", template_str)
-                            if list_match:
-                                list_str = list_match.group(1)
-                                # Count elements in the list
-                                elements = [item.strip() for item in list_str.strip("[]").split(",") if item.strip()]
-                                if len(elements) < modulus_val:
-                                    raise ValueError(
-                                        f"List index error: Template has list with {len(elements)} elements "
-                                        f"but uses modulus {modulus_val}, which can cause index errors at runtime. "
-                                        f"Either increase the list size or decrease the modulus value."
-                                    )
-
                     template = jinja_env.from_string(template_str)
                     return template.render(row=row)
                 except Exception as e:
