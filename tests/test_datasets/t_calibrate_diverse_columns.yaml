@@ -47,3 +47,8 @@ calibration_set:
       num_samples: 10
       formatter_params:
         prefix: Solve the following problem using {{ ['Zephyr', 'Prolog', 'Cobol', 'Apex', 'Crystal', 'Fortran', 'Nim', 'Delphi', 'Ada', 'Objective-C', 'VBA', 'Perl', 'Groovy', 'MATLAB', 'Solidity', 'Visual Basic', 'MicroPython', 'OCaml', 'Erlang', 'Julia', 'Lisp', 'F#', 'Clojure', 'GDScript', 'Scala', 'R', 'Haskell', 'Ruby', 'Elixir', 'x86-64 ASM', 'ARM-64 ASM', 'Assembly', 'Lua', 'Zig', 'Dart', 'Swift', 'Metal', 'PowerShell', 'PHP', 'Kotlin', 'C', 'Java', 'C++', 'C#', 'Bash/Shell', 'Go', 'Rust', 'TypeScript', 'HTML/CSS', 'SQL', 'JavaScript', 'Python', 'Lean', 'Coq', 'SML', 'Agda', 'Idris', 'Racket', 'CUDA', 'Vulkan'][hash(row|string) % 60] }}
+    - dataset: tests/test_datasets/toolace_sample
+      split: train
+      columns: ["system", "conversations"]
+      formatter: chat_completion_with_sysprompt
+      num_samples: 5

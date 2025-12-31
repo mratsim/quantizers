@@ -188,7 +188,7 @@ def test_yaml_direct_loading():
     assert calib_config.max_seq_length == 8192
     assert calib_config.shuffle is True
     assert calib_config.seed == 42
-    assert len(calib_config.datasets) == 8
+    assert len(calib_config.datasets) == 9
 
     print(f"✅ Configuration has {len(calib_config.datasets)} datasets as expected")
 
@@ -209,8 +209,8 @@ def test_problematic_mixed_dataset():
     calib_config = CalibrationSetConfig.from_file("tests/test_datasets/t_calibrate_diverse_columns.yaml")
 
     # Verify all datasets are loaded
-    assert len(calib_config.datasets) == 8
-    print("✅ Configuration loaded with 8 diverse datasets")
+    assert len(calib_config.datasets) == 9
+    print("✅ Configuration loaded with 9 diverse datasets")
 
     # Try to create calibration set - this should now pass with our fix
     try:
@@ -218,7 +218,9 @@ def test_problematic_mixed_dataset():
         print("✅ Successfully created calibration set with mixed datasets")
 
         # Verify the set was created correctly
-        assert calib_set.total_num_samples == 38  # 6 datasets × 3 samples each + 2 datasets × 10 samples each = 18 + 20 = 38
+        assert (
+            calib_set.total_num_samples == 43
+        )  # 7 datasets × 3 samples each + 2 datasets × 10 samples each + 1 dataset with 5 samples = 21 + 20 + 5 = 46
         print("✅ Calibration set has correct number of samples")
 
         # Verify that all formatted entries are lists (not dicts)
@@ -284,6 +286,7 @@ def main():
         test_yaml_direct_loading()
         test_problematic_mixed_dataset()
         test_calibration_set_with_arbitrary_columns()
+        test_toolace_diverse_columns()
 
         print("\n🎉 All tests passed successfully!")
 
@@ -291,5 +294,76 @@ def main():
         print(f"\n❌ Test failed with error: {e}")
 
 
+def test_toolace_diverse_columns():
+    """Test loading ToolACE dataset with diverse column configurations."""
+    print("\n=== Testing ToolACE Dataset with Diverse Columns ===")
+
+    # Test configuration with ToolACE dataset and the new formatter
+    try:
+        config = CalibrationSetConfig(
+            max_seq_length=4096,
+            shuffle=False,
+            seed=42,
+            datasets=[
+                DatasetEntryConfig(
+                    dataset=str(Path(__file__).parent / "test_datasets" / "toolace_sample"),
+                    split="train",
+                    columns=["system", "conversations"],  # Specific column names for ToolACE
+                    formatter="chat_completion_with_sysprompt",
+                    num_samples=3,
+                )
+            ],
+        )
+
+        # Create CalibrationSet with the config
+        calib_set = CalibrationSet.from_config(config)
+
+        # Get untokenized data to verify it works
+        assert calib_set._untokenized_calibration_set is not None, "CalibrationSet should have untokenized data"
+        assert len(calib_set._untokenized_calibration_set) > 0, "CalibrationSet should have data samples"
+
+        # Check the first sample to ensure it has been properly formatted
+        first_sample = calib_set._untokenized_calibration_set[0]
+        formatted = first_sample["formatted"]
+
+        # Verify the formatter returns the correct structure
+        assert isinstance(formatted, list), f"Expected list, got {type(formatted)}"
+        assert len(formatted) > 0, "Formatted list is empty"
+
+        # Check each message structure
+        for msg in formatted:
+            assert isinstance(msg, dict), f"Expected dict, got {type(msg)}"
+            assert "role" in msg, "Message missing 'role' field"
+            assert "content" in msg, "Message missing 'content' field"
+
+            # Validate roles are valid
+            assert msg["role"] in ["system", "user", "assistant"], f"Invalid role: {msg['role']}"
+
+        # Verify at least one system message is present
+        system_messages = [msg for msg in formatted if msg["role"] == "system"]
+        assert len(system_messages) > 0, "Should have at least one system message"
+
+        print("\n✅ ToolACE dataset correctly loaded with system prompts and conversations")
+
+    except Exception as e:
+        pytest.fail(f"ToolACE dataset test failed: {e}")
+        import traceback
+
+        traceback.print_exc()
+
+
 if __name__ == "__main__":
-    main()
+    print("Running calibration set diverse columns tests...")
+    try:
+        test_load_diverse_columns_calibration_set()
+        test_yaml_direct_loading()
+        test_problematic_mixed_dataset()
+        test_calibration_set_with_arbitrary_columns()
+        test_toolace_diverse_columns()
+        print("\n🎉 All tests passed successfully!")
+    except Exception as e:
+        import traceback
+
+        print(f"\n❌ Test failed with error: {e}")
+        traceback.print_exc()
+        sys.exit(1)

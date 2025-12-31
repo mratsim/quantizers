@@ -570,6 +570,62 @@ def test_load_dataset_typerror_with_old_format():
         print(f"❌ Error details: {e}")
 
 
+def test_toolace_format_loading():
+    """Test loading ToolACE dataset with system prompts and conversations."""
+    print("\n=== Testing ToolACE Format Loading ===")
+
+    # Create a test configuration
+    config = CalibrationSetConfig(
+        max_seq_length=4096,
+        shuffle=False,
+        seed=42,
+        datasets=[
+            DatasetEntryConfig(
+                dataset=str(Path(__file__).parent / "test_datasets" / "toolace_sample"),
+                split="train",
+                columns=["system", "conversations"],  # Specific column names for ToolACE
+                formatter="chat_completion_with_sysprompt",
+                num_samples=3,
+            )
+        ],
+    )
+
+    # CalibrationSet using factory method
+    calib_set = CalibrationSet.from_config(config, cache_dir="./cache")
+
+    # Verify properties
+    assert calib_set.config == config
+
+    # Verify data loading works correctly
+    assert calib_set.total_num_samples > 0, "No samples were loaded"
+    assert calib_set.total_num_samples <= 3, "Too many samples loaded"
+
+    # Access the untokenized data directly
+    untokenized_data = calib_set._untokenized_calibration_set
+    assert untokenized_data is not None, "Should have untokenized data"
+    assert len(untokenized_data) > 0, "Should have data samples"
+
+    # Check that each sample has been properly formatted
+    for sample in untokenized_data:
+        # The formatter returns a list of dicts with role/content fields
+        messages = sample["formatted"]
+        assert isinstance(messages, list), "Messages should be a list"
+
+        # At minimum should have a system message and some conversation
+        assert len(messages) >= 1, "Should have at least one message"
+
+        # Check that each message has the expected structure
+        for msg in messages:
+            assert isinstance(msg, dict), "Each message should be a dict"
+            assert "role" in msg, "Message should have a role"
+            assert "content" in msg, "Message should have content"
+
+            # Verify roles are valid
+            assert msg["role"] in ["system", "user", "assistant"], f"Invalid role: {msg['role']}"
+
+    print(f"✅ Loaded {len(untokenized_data)} ToolACE samples with system prompts")
+
+
 if __name__ == "__main__":
     print("🔍 Running dataset loading tests...")
 
@@ -582,6 +638,7 @@ if __name__ == "__main__":
         test_diverse_column_names_usage()
         test_load_dataset_typerror_fix()
         test_load_dataset_typerror_with_old_format()
+        test_toolace_format_loading()
 
         print("\n🎉 All dataset loading tests passed!")
     except Exception as e:

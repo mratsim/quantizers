@@ -287,6 +287,54 @@ def test_yaml_anchor_config():
         assert False, f"Error loading configuration: {e}"
 
 
+def test_toolace_config():
+    """Test loading the ToolACE calibration set configuration."""
+    config_path = Path(__file__).parent.parent / "configs" / "calibration_sets" / "test-calibrate_toolace.yaml"
+
+    print(f"Testing ToolACE configuration from: {config_path}")
+
+    try:
+        # Load the configuration
+        config = CalibrationSetConfig.from_file(config_path)
+
+        # Verify configuration loaded
+        assert config is not None, "Configuration should not be None"
+        assert len(config.datasets) == 1, f"Configuration should have exactly 1 dataset, got {len(config.datasets)}"
+
+        print(f"✅ Successfully loaded configuration with {len(config.datasets)} datasets")
+
+        # Check that the expected dataset is present
+        expected_dataset = "tests/test_datasets/toolace_sample"
+        found_datasets = [ds.dataset for ds in config.datasets]
+
+        print(f"Found datasets: {found_datasets}")
+
+        # Verify the expected dataset is present
+        assert expected_dataset in found_datasets, f"Expected dataset {expected_dataset} not found"
+
+        print("✅ ToolACE dataset is present")
+
+        # Check formatter configuration
+        ds = config.datasets[0]
+        assert ds.formatter == "chat_completion_with_sysprompt", "Should use chat_completion_with_sysprompt formatter"
+        assert ds.columns == ["system", "conversations"], "Should use system and conversations columns"
+        assert ds.num_samples == 5, "Should load 5 samples"
+
+        # Validate the configuration
+        try:
+            config.validate()
+            print("✅ Configuration validation passed")
+        except Exception as e:
+            print(f"❌ Configuration validation failed: {e}")
+            assert False, f"Configuration validation failed: {e}"
+
+        print("\n🎉 ToolACE configuration test passed!")
+
+    except Exception as e:
+        print(f"❌ Error loading configuration: {e}")
+        assert False, f"Error loading configuration: {e}"
+
+
 if __name__ == "__main__":
     print("=== Testing Consolidated Calibration Set Configuration ===\n")
 
@@ -298,4 +346,6 @@ if __name__ == "__main__":
     test_streaming_configurations()
     print()
     test_yaml_anchor_config()
+    print()
+    test_toolace_config()
     print()

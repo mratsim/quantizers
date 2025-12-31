@@ -1,0 +1,11 @@
+calibration_set:
+  max_seq_length: 8192
+  shuffle: true
+  seed: 42
+  datasets:
+    # ToolACE dataset with system prompts and conversations
+    - dataset: tests/test_datasets/toolace_sample
+      split: train
+      columns: ["system", "conversations"]
+      formatter: chat_completion_with_sysprompt
+      num_samples: 5
