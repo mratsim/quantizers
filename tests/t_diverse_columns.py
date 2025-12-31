@@ -220,7 +220,7 @@ def test_problematic_mixed_dataset():
         # Verify the set was created correctly
         assert (
             calib_set.total_num_samples == 43
-        )  # 7 datasets × 3 samples each + 2 datasets × 10 samples each + 1 dataset with 5 samples = 21 + 20 + 5 = 46
+        )  # 6 datasets × 3 samples each + 2 datasets × 10 samples each + 1 dataset with 5 samples = 18 + 20 + 5 = 43
         print("✅ Calibration set has correct number of samples")
 
         # Verify that all formatted entries are lists (not dicts)
