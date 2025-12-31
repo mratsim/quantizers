@@ -250,31 +250,28 @@ def test_calibration_set_with_arbitrary_columns():
     print("\n=== Testing CalibrationSet with Arbitrary Columns ===")
 
     # Test configuration with arbitrary column names
-    try:
-        config = CalibrationSetConfig(
-            max_seq_length=4096,
-            shuffle=False,
-            seed=42,
-            datasets=[
-                DatasetEntryConfig(
-                    dataset=str(Path(__file__).parent / "test_datasets" / "prompt_answer" / "ds_input_output"),
-                    split="train",
-                    columns=["input", "output"],  # Existing column names in dataset
-                    formatter="prompt_answer",
-                    num_samples=2,
-                )
-            ],
-        )
+    config = CalibrationSetConfig(
+        max_seq_length=4096,
+        shuffle=False,
+        seed=42,
+        datasets=[
+            DatasetEntryConfig(
+                dataset=str(Path(__file__).parent / "test_datasets" / "prompt_answer" / "ds_input_output"),
+                split="train",
+                columns=["input", "output"],  # Existing column names in dataset
+                formatter="prompt_answer",
+                num_samples=2,
+            )
+        ],
+    )
 
-        # Create CalibrationSet with the config
-        calib_set = CalibrationSet.from_config(config)
+    # Create CalibrationSet with the config
+    calib_set = CalibrationSet.from_config(config)
 
-        # Get untokenized data to verify it works
-        assert calib_set._untokenized_calibration_set is not None, "CalibrationSet should have untokenized data"
-        assert len(calib_set._untokenized_calibration_set) > 0, "CalibrationSet should have data samples"
-        print("\n✅ CalibrationSet correctly processes data with arbitrary column names")
-    except Exception as e:
-        pytest.fail(f"CalibrationSet test with arbitrary columns failed: {e}")
+    # Get untokenized data to verify it works
+    assert calib_set._untokenized_calibration_set is not None, "CalibrationSet should have untokenized data"
+    assert len(calib_set._untokenized_calibration_set) > 0, "CalibrationSet should have data samples"
+    print("\n✅ CalibrationSet correctly processes data with arbitrary column names")
 
 
 def main():
@@ -299,57 +296,50 @@ def test_toolace_diverse_columns():
     print("\n=== Testing ToolACE Dataset with Diverse Columns ===")
 
     # Test configuration with ToolACE dataset and the new formatter
-    try:
-        config = CalibrationSetConfig(
-            max_seq_length=4096,
-            shuffle=False,
-            seed=42,
-            datasets=[
-                DatasetEntryConfig(
-                    dataset=str(Path(__file__).parent / "test_datasets" / "toolace_sample"),
-                    split="train",
-                    columns=["system", "conversations"],  # Specific column names for ToolACE
-                    formatter="chat_completion_with_sysprompt",
-                    num_samples=3,
-                )
-            ],
-        )
+    config = CalibrationSetConfig(
+        max_seq_length=4096,
+        shuffle=False,
+        seed=42,
+        datasets=[
+            DatasetEntryConfig(
+                dataset=str(Path(__file__).parent / "test_datasets" / "toolace_sample"),
+                split="train",
+                columns=["system", "conversations"],  # Specific column names for ToolACE
+                formatter="chat_completion_with_sysprompt",
+                num_samples=3,
+            )
+        ],
+    )
 
-        # Create CalibrationSet with the config
-        calib_set = CalibrationSet.from_config(config)
+    # Create CalibrationSet with the config
+    calib_set = CalibrationSet.from_config(config)
 
-        # Get untokenized data to verify it works
-        assert calib_set._untokenized_calibration_set is not None, "CalibrationSet should have untokenized data"
-        assert len(calib_set._untokenized_calibration_set) > 0, "CalibrationSet should have data samples"
+    # Get untokenized data to verify it works
+    assert calib_set._untokenized_calibration_set is not None, "CalibrationSet should have untokenized data"
+    assert len(calib_set._untokenized_calibration_set) > 0, "CalibrationSet should have data samples"
 
-        # Check the first sample to ensure it has been properly formatted
-        first_sample = calib_set._untokenized_calibration_set[0]
-        formatted = first_sample["formatted"]
+    # Check the first sample to ensure it has been properly formatted
+    first_sample = calib_set._untokenized_calibration_set[0]
+    formatted = first_sample["formatted"]
 
-        # Verify the formatter returns the correct structure
-        assert isinstance(formatted, list), f"Expected list, got {type(formatted)}"
-        assert len(formatted) > 0, "Formatted list is empty"
+    # Verify the formatter returns the correct structure
+    assert isinstance(formatted, list), f"Expected list, got {type(formatted)}"
+    assert len(formatted) > 0, "Formatted list is empty"
 
-        # Check each message structure
-        for msg in formatted:
-            assert isinstance(msg, dict), f"Expected dict, got {type(msg)}"
-            assert "role" in msg, "Message missing 'role' field"
-            assert "content" in msg, "Message missing 'content' field"
+    # Check each message structure
+    for msg in formatted:
+        assert isinstance(msg, dict), f"Expected dict, got {type(msg)}"
+        assert "role" in msg, "Message missing 'role' field"
+        assert "content" in msg, "Message missing 'content' field"
 
-            # Validate roles are valid
-            assert msg["role"] in ["system", "user", "assistant"], f"Invalid role: {msg['role']}"
+        # Validate roles are valid
+        assert msg["role"] in ["system", "user", "assistant"], f"Invalid role: {msg['role']}"
 
-        # Verify at least one system message is present
-        system_messages = [msg for msg in formatted if msg["role"] == "system"]
-        assert len(system_messages) > 0, "Should have at least one system message"
+    # Verify at least one system message is present
+    system_messages = [msg for msg in formatted if msg["role"] == "system"]
+    assert len(system_messages) > 0, "Should have at least one system message"
 
-        print("\n✅ ToolACE dataset correctly loaded with system prompts and conversations")
-
-    except Exception as e:
-        pytest.fail(f"ToolACE dataset test failed: {e}")
-        import traceback
-
-        traceback.print_exc()
+    print("\n✅ ToolACE dataset correctly loaded with system prompts and conversations")
 
 
 if __name__ == "__main__":
