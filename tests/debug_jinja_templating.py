@@ -10,6 +10,8 @@ from pathlib import Path
 # Add the source directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from jinja2 import StrictUndefined
+
 
 class MockRow:
     """Mock row object for testing Jinja templates."""
@@ -80,7 +82,21 @@ def test_jinja_templates():
     try:
         from jinja2 import Environment
 
-        jinja_env = Environment()
+        jinja_env = Environment(undefined=StrictUndefined, autoescape=True)
+        # Add Python built-ins to Jinja context to mirror production behavior
+        jinja_env.globals.update(
+            {
+                "hash": hash,
+                "len": len,
+                "abs": abs,
+                "max": max,
+                "min": min,
+                "sum": sum,
+                "sorted": sorted,
+                "enumerate": enumerate,
+                "zip": zip,
+            }
+        )
 
         mock_row = MockRow()
         template = jinja_env.from_string(valid_template)
