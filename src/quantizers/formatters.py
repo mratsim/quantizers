@@ -65,15 +65,14 @@ class DatasetFmt:
                         content = msg.get("value", "")
 
                         # Map ToolACE roles to standard roles
-                        if role == "user":
-                            messages.append({"role": "user", "content": content})
-                        elif role == "assistant":
-                            messages.append({"role": "assistant", "content": content})
-                        elif role == "system":
-                            messages.append({"role": "system", "content": content})
-                        elif role == "tool":
-                            # Tool responses can be as assistant messages
-                            messages.append({"role": "assistant", "content": content})
+                        role_map = {
+                            "user": "user",
+                            "assistant": "assistant",
+                            "system": "system",
+                            "tool": "assistant",  # Tool responses can be as assistant messages
+                        }
+                        if role in role_map:
+                            messages.append({"role": role_map[role], "content": content})
                     # Handle standard format with "role" and "content" keys
                     elif "role" in msg and "content" in msg:
                         messages.append({"role": msg["role"], "content": msg["content"]})
