@@ -21,7 +21,7 @@ import tempfile
 from pathlib import Path
 
 # Add the source directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import datasets
 
@@ -455,7 +455,14 @@ if __name__ == "__main__":
     print("🔍 Running cache functionality tests...")
 
     try:
+        test_cache_key_generation()
+        test_cache_save_and_load()
+        test_cache_from_config_and_cache()
+        test_cache_missing_error()
+        test_cache_key_consistency()
+        test_cache_different_configurations()
         test_cache_key()
+        test_cache_defensive_validation()
     except Exception as e:
         print(f"❌ Test failed: {e}")
         raise

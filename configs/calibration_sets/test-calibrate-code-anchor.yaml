@@ -1,0 +1,25 @@
+calibration_set:
+  _templates:
+    language_prefix: &language_prefix "Solve the following problem using {{ ['Zephyr', 'Prolog', 'Cobol', 'Apex', 'Crystal', 'Fortran', 'Nim', 'Delphi', 'Ada', 'Objective-C', 'VBA', 'Perl', 'Groovy', 'MATLAB', 'Solidity', 'Visual Basic', 'MicroPython', 'OCaml', 'Erlang', 'Julia', 'Lisp', 'F#', 'Clojure', 'GDScript', 'Scala', 'R', 'Haskell', 'Ruby', 'Elixir', 'x86-64 ASM', 'ARM-64 ASM', 'Assembly', 'Lua', 'Zig', 'Dart', 'Swift', 'Metal', 'PowerShell', 'PHP', 'Kotlin', 'C', 'Java', 'C++', 'C#', 'Bash/Shell', 'Go', 'Rust', 'TypeScript', 'HTML/CSS', 'SQL', 'JavaScript', 'Python', 'Lean', 'Coq', 'SML', 'Agda', 'Idris', 'Racket', 'CUDA', 'Vulkan'][hash(row|string) % 60] }}"
+  max_seq_length: 8192
+  shuffle: true
+  seed: 42
+
+  datasets:
+    # Humaneval Rust with Jinja templating for diverse language selection
+    - dataset: diversoailab/humaneval-rust
+      split: test
+      columns: ["prompt"]
+      formatter: raw_text
+      num_samples: 10
+      formatter_params:
+        prefix: *language_prefix
+
+    # MathArena Euler problems with Jinja templating for diverse language selection
+    - dataset: MathArena/project_euler
+      split: train
+      columns: ["problem"]
+      formatter: raw_text
+      num_samples: 10
+      formatter_params:
+        prefix: *language_prefix

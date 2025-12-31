@@ -13,14 +13,19 @@ import dataclasses
 import hashlib
 import json
 import logging
+import re
 from dataclasses import field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import yaml  # type: ignore
 from datasets import Dataset, concatenate_datasets, load_dataset
+from jinja2 import Environment, StrictUndefined
 
 from .formatters import DatasetFmt
+
+# Default sample limit for streaming datasets when "all" is requested
+STREAMING_DEFAULT_SAMPLE_LIMIT = 256
 
 
 @dataclasses.dataclass
@@ -36,6 +41,8 @@ class DatasetEntryConfig:
 
     Optional fields:
     - subset: Dataset subset (optional, None for no subset)
+    - streaming: Whether to use streaming when loading (optional, default False)
+    - formatter_params: Additional parameters to pass to the formatter (optional)
     """
 
     def __init__(
@@ -46,6 +53,8 @@ class DatasetEntryConfig:
         subset: Optional[str] = None,
         columns: Optional[List[str]] = None,
         num_samples: Optional[Union[int, str]] = None,
+        streaming: bool = False,
+        formatter_params: Optional[Dict[str, Any]] = None,
     ):
         self.dataset = dataset
         self.split = split
@@ -53,6 +62,8 @@ class DatasetEntryConfig:
         self.columns = columns or []
         self.formatter = formatter
         self.num_samples = num_samples
+        self.streaming = streaming
+        self.formatter_params = formatter_params or {}
         self.validate()
 
     @classmethod
@@ -81,13 +92,18 @@ class DatasetEntryConfig:
         elif not (isinstance(num_samples, int) and num_samples > 0):
             raise ValueError("num_samples must be a positive integer or 'all'")
 
+        streaming = data.get("streaming", False)
+        formatter_params = data.get("formatter_params", {})
+
         return cls(
             dataset=dataset,
-            formatter=formatter,
             split=split,
             subset=subset,
             columns=columns,
+            formatter=formatter,
             num_samples=num_samples,
+            streaming=streaming,
+            formatter_params=formatter_params,
         )
 
     def validate(self) -> None:
@@ -106,27 +122,70 @@ class DatasetEntryConfig:
         if not self.formatter:
             raise ValueError("formatter is required in calibration entry")
 
+        # Validate formatter_params that look like Jinja templates
+        if self.formatter_params:
+            for key, value in self.formatter_params.items():
+                if isinstance(value, str) and "{{" in value and "}}" in value:
+                    self._validate_template_modulus(value)
+
+    def _validate_template_modulus(self, template_str: str) -> None:
+        """Validate template modulus operations at config load time.
+
+        Args:
+            template_str: The template string to validate
+
+        Raises:
+            ValueError: If the template has a list index error
+        """
+        if "[hash(row|string)" in template_str and "]" in template_str:
+            modulus_match = re.search(r"\[hash\(row\|string\)\s*%\s*(\d+)\]", template_str)
+            if modulus_match:
+                modulus_val = int(modulus_match.group(1))
+                list_match = re.search(r"(\[.*?\])\s*\[hash\(row\|string\)\s*%\s*\d+\]", template_str)
+                if list_match:
+                    list_str = list_match.group(1)
+                    elements = [item.strip() for item in list_str.strip("[]").split(",") if item.strip()]
+                    if len(elements) < modulus_val:
+                        raise ValueError(
+                            f"List index error: Template has list with {len(elements)} elements "
+                            f"but uses modulus {modulus_val}, which can cause index errors at runtime."
+                        )
+
     def resolve_num_samples(self, dataset_name: str, dataset: Any) -> int:
         """Resolve num_samples based on actual dataset size.
 
         Args:
             dataset_name: Name of the dataset for logging.
-            dataset: HuggingFace Dataset to get actual size from.
+            dataset: HuggingFace Dataset or IterableDataset to get actual size from.
 
         Returns:
             int: Resolved number of samples.
         """
-        actual_size = len(dataset)
+        # For streaming datasets, we can't get length, so use requested number directly
+        try:
+            actual_size = len(dataset)
+        except TypeError:
+            # Streaming IterableDataset has no len()
+            actual_size = None
 
-        # If "all" was requested, use all samples
+        # If "all" was requested but we can't determine size (streaming), use a default
         if isinstance(self.num_samples, str) and self.num_samples == "all":
-            requested_num = actual_size
+            if actual_size is not None:
+                requested_num = actual_size
+            else:
+                # For streaming datasets with "all", set to a reasonable default
+                requested_num = STREAMING_DEFAULT_SAMPLE_LIMIT
+                log = logging.getLogger(__name__)
+                log.info(
+                    f"Using default sample count of {requested_num} for streaming "
+                    f"dataset {dataset_name} ('all' requested but length unknown)"
+                )
         else:
             # Use the requested number if it's a positive integer
             requested_num = int(self.num_samples if self.num_samples is not None else 0)
 
-        # Cap at actual dataset size if requested exceeds what's available
-        if requested_num > actual_size:
+        # Cap at actual dataset size if requested exceeds what's available (only for non-streaming)
+        if actual_size is not None and requested_num > actual_size:
             log = logging.getLogger(__name__)
             log.warning(
                 f"Requested {requested_num} samples from {dataset_name}, "
@@ -425,19 +484,22 @@ class CalibrationSet:
                 if ds_config.subset is not None:
                     # nosec B615, B703
                     dataset = load_dataset(  # nosec
-                        ds_config.dataset, ds_config.subset, split=ds_config.split
+                        ds_config.dataset, ds_config.subset, split=ds_config.split, streaming=ds_config.streaming
                     )
                 else:
                     # nosec B615, B703
                     dataset = load_dataset(  # nosec
-                        ds_config.dataset, split=ds_config.split
+                        ds_config.dataset, split=ds_config.split, streaming=ds_config.streaming
                     )
             else:
                 # Handle cases where dataset is a tuple of multiple arguments
                 # nosec B615, B703
-                dataset = load_dataset(  # nosec
-                    *ds_config.dataset, split=ds_config.split
-                )
+                if ds_config.subset is not None:
+                    dataset = load_dataset(
+                        ds_config.dataset[0], ds_config.subset, split=ds_config.split, streaming=ds_config.streaming
+                    )  # nosec
+                else:
+                    dataset = load_dataset(ds_config.dataset[0], split=ds_config.split, streaming=ds_config.streaming)  # nosec
 
             # Resolve number of samples based on actual dataset size
             num_samples = ds_config.resolve_num_samples(ds_config.dataset, dataset)
@@ -449,18 +511,97 @@ class CalibrationSet:
             # Apply formatter function
             formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
 
-            # Apply formatter function
-            formatter_func = DatasetFmt.get_formatter(ds_config.formatter)
+            # Setup Jinja environment for template rendering with Python built-ins
+            # Note: autoescape=True is kept as the default for security reasons. After evaluating
+            # the risks and benefits, we're keeping this setting as discussed in:
+            # https://github.com/mratsim/quantizers/pull/6#pullrequestreview-3619760720
+            # The current templates only contain language names (e.g., Python, C++, F#) which
+            # don't contain HTML special characters that would be escaped.
+            jinja_env = Environment(undefined=StrictUndefined, autoescape=True)
+            # Add Python built-ins to Jinja context
+            jinja_env.globals.update(
+                {
+                    "hash": hash,
+                    "len": len,
+                    "abs": abs,
+                    "max": max,
+                    "min": min,
+                    "sum": sum,
+                    "sorted": sorted,
+                    "enumerate": enumerate,
+                    "zip": zip,
+                }
+            )
+
+            # Process formatter parameters that might contain Jinja templates
+            processed_params = {}
+            if ds_config.formatter_params:
+                for key, value in ds_config.formatter_params.items():
+                    if isinstance(value, str) and "{{" in value and "}}" in value:
+                        # This is a Jinja template, render it later
+                        processed_params[key] = value
+                    else:
+                        processed_params[key] = value
+
+            # Helper function to render Jinja templates
+            def render_template(template_str, row):
+                try:
+                    template = jinja_env.from_string(template_str)
+                    return template.render(row=row)
+                except Exception as e:
+                    logging.error(f"Failed to render Jinja template '{template_str}': {e}")
+                    raise
 
             # Apply formatting directly using named function to avoid lambda variable capture issues
+            # Pass formatter parameters if they exist
             def apply_formatter(row):
-                result = formatter_func(ds_config.columns, row)
+                # Render any Jinja templates in the parameters
+                rendered_params = {}
+                for key, value in processed_params.items():
+                    if isinstance(value, str) and "{{" in value and "}}" in value:
+                        rendered_value = render_template(value, row)
+                        rendered_params[key] = rendered_value
+                    else:
+                        rendered_params[key] = value
+
+                if rendered_params:
+                    result = formatter_func(ds_config.columns, row, **rendered_params)
+                else:
+                    result = formatter_func(ds_config.columns, row)
                 return {"formatted": result}
 
+            # Note: a function indirection is absolutely necessary due to Python lambda scoping rules
+            # https://github.com/mratsim/quantizers/pull/2#discussion_r2653416980
+            # This would lead to incorrect type 'Dict' instead of 'List' in certain cases
+            #       dataset = dataset.map(
+            #           lambda row: {"formatted": formatter_func(ds_config.columns, row)},
+            #           remove_columns=dataset.column_names,
+            #       )
             dataset = dataset.map(
                 apply_formatter,
                 remove_columns=dataset.column_names,
             )
+
+            # Convert streaming datasets to regular datasets to allow concatenation
+            if ds_config.streaming:
+                # For streaming datasets, take only the samples we need
+                if ds_config.num_samples != "all":
+                    # Take exactly the number of samples we need
+                    dataset = dataset.take(ds_config.num_samples)
+                else:
+                    # For "all" with streaming, take a reasonable default
+                    dataset = dataset.take(STREAMING_DEFAULT_SAMPLE_LIMIT)
+
+                # Convert iterable dataset to regular dataset by creating a list and then a Dataset
+                dataset = list(dataset)  # Collect all items
+                dataset = Dataset.from_dict({"formatted": [d["formatted"] for d in dataset]})
+            else:
+                # For non-streaming, ensure we have exactly the samples we need
+                if isinstance(ds_config.num_samples, int) and len(dataset) > ds_config.num_samples:  # type: ignore[operator, arg-type]
+                    # The mypy type ignore is intentional here because:
+                    # 1. `isinstance(ds_config.num_samples, int)` ensures num_samples is an int
+                    # 2. MyPy can't properly track the narrowed type after isinstance checks
+                    dataset = dataset.select(range(ds_config.num_samples))  # type: ignore[arg-type]
 
             # Store for later concatenation
             all_datasets.append(dataset)

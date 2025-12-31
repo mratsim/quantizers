@@ -1,0 +1,127 @@
+[
+  {
+    "data": {
+      "name": "brcktsrm",
+      "description": "Problem description.\nVipul is a hardworking super-hero who maintains the bracket ratio of all the strings in the world. Recently he indulged himself in saving the string population so much that he lost his ability for checking brackets (luckily, not permanently ).Being his super-hero friend help him in his time of hardship.\n\nInput\n\nThe first line of the input contains an integer T denoting the number of test cases. The description of T test cases follows.\nThe first line of each test case contains a single string S denoting the string to be checked.\n\n\nOutput\n\nFor each test case, output a single line printing \"YES\" or \"NO\" (without \" \" and in uppercase only) , denoting if the brackets in the given string is balanced or not .\n\n\nConstraints\n\n1 ≤ T ≤ 10\n1 ≤ length of S ≤ 60",
+      "public_tests": {
+        "input": ["3\n((()))\n(())()\n()(()"],
+        "output": ["YES\nYES\nNO"]
+      },
+      "private_tests": {
+        "input": [],
+        "output": []
+      },
+      "generated_tests": {
+        "input": [],
+        "output": []
+      },
+      "source": 1,
+      "difficulty": 6,
+      "solutions": {
+        "language": [1, 1, 1],
+        "solution": [
+          "for _ in range(input()):\n    try:\n        eval(raw_input())\n        print 'YES'\n    except TypeError:\n        print 'YES'\n    except:\n        print 'NO'",
+          "for _ in range(input()):\n    ins = raw_input().strip()\n    stck = []\n    res = \"YES\"\n    for x in ins:\n        if x == \"(\":\n            stck.append(x)\n        else:\n            if len(stck)>0:\n                stck.pop()\n            else:\n                res = \"NO\"\n                break\n    if len(stck) > 0: res = \"NO\" \n    print res",
+          "for _ in range(input()):\n    try: eval(raw_input()); print 'YES'\n    except TypeError: print 'YES'\n    except: print 'NO'"
+        ]
+      },
+      "incorrect_solutions": {
+        "language": [],
+        "solution": []
+      },
+      "cf_contest_id": 0,
+      "cf_index": "",
+      "cf_points": 0.0,
+      "cf_rating": 0,
+      "cf_tags": [],
+      "is_description_translated": false,
+      "untranslated_description": "",
+      "time_limit": null,
+      "memory_limit_bytes": 0,
+      "input_file": "",
+      "output_file": ""
+    }
+  },
+  {
+    "data": {
+      "name": "comm3",
+      "description": "The Chef likes to stay in touch with his staff. So, the Chef, the head server, and the sous-chef all carry two-way transceivers so they can stay in constant contact. Of course, these transceivers have a limited range so if two are too far apart, they cannot communicate directly.\n\nThe Chef invested in top-of-the-line transceivers which have a few advanced features. One is that even if two people cannot talk directly because they are out of range, if there is another transceiver that is close enough to both, then the two transceivers can still communicate with each other using the third transceiver as an intermediate device.\n\nThere has been a minor emergency in the Chef's restaurant and he needs to communicate with both the head server and the sous-chef right away. Help the Chef determine if it is possible for all three people to communicate with each other, even if two must communicate through the third because they are too far apart.\n\nInput\n\nThe first line contains a single positive integer T ≤ 100 indicating the number of test cases to follow. The first line of each test case contains a positive integer R ≤ 1,000 indicating that two transceivers can communicate directly without an intermediate transceiver if they are at most R meters away from each other. The remaining three lines of the test case describe the current locations of the Chef, the head server, and the sous-chef, respectively. Each such line contains two integers X,Y (at most 10,000 in absolute value) indicating that the respective person is located at position X,Y.\n\n\nOutput\n\nFor each test case you are to output a single line containing a single string. If it is possible for all three to communicate then you should output \"yes\". Otherwise, you should output \"no\".\n\nTo be clear, we say that two transceivers are close enough to communicate directly if the length of the straight line connecting their X,Y coordinates is at most R.",
+      "public_tests": {
+        "input": ["1\n0 1\n0 0\n1 0", "2\n0 1\n0 0\n1 0", "2\n0 0\n0 2\n2 1"],
+        "output": ["yes", "yes", "no"]
+      },
+      "private_tests": {
+        "input": [],
+        "output": []
+      },
+      "generated_tests": {
+        "input": [],
+        "output": []
+      },
+      "source": 1,
+      "difficulty": 1,
+      "solutions": {
+        "language": [1],
+        "solution": [
+          "import math\nno_of_testcases = int(input())\nfor each in range(no_of_testcases):\n    dist = int(input())\n    point_1 = map(int,raw_input().split())\n    point_2 = map(int,raw_input().split())\n    point_3 = map(int,raw_input().split())\n    \n    x1, y1 = point_1\n    x2, y2 = point_2\n    x3, y3 = point_3\n    \n    d12 = math.sqrt((x1-x2)**2 + (y1-y2)**2)\n    d13 = math.sqrt((x1-x3)**2 + (y1-y3)**2)\n    d23 = math.sqrt((x2-x3)**2 + (y2-y3)**2)\n    \n    if d12 <= dist and d13 <= dist and d23 <= dist:\n        print 'yes'\n    elif d12 <= dist and (d13 <= dist or d23 <= dist):\n        print 'yes'\n    elif d13 <= dist and (d12 <= dist or d23 <= dist):\n        print 'yes'\n    elif d23 <= dist and (d12 <= dist or d13 <= dist):\n        print 'yes'\n    else:\n        print 'no'"
+        ]
+      },
+      "incorrect_solutions": {
+        "language": [],
+        "solution": []
+      },
+      "cf_contest_id": 0,
+      "cf_index": "",
+      "cf_points": 0.0,
+      "cf_rating": 0,
+      "cf_tags": [],
+      "is_description_translated": false,
+      "untranslated_description": "",
+      "time_limit": null,
+      "memory_limit_bytes": 0,
+      "input_file": "",
+      "output_file": ""
+    }
+  },
+  {
+    "data": {
+      "name": "gcd2",
+      "description": "Frank explained its friend Felman the algorithm of Euclides to calculate the GCD of two numbers. Then Felman implements it algorithm\n\nint gcd(int a, int b)\n{\n\tif (b==0)\n\t\treturn a;\n\telse\n\t\treturn gcd(b,a%b);\n}\n\nFelman minimised the code by implementing the algorithm iteratively\n\nint gcd(int a, int b)\n{\n\twhile(b)\n\t\ta=b,a=b,a%b;\n\treturn a;\n}\n\nand this implementation is very fast and can be used to calculate the GCD of large numbers.\n\nNow, Felman wants to test his code with new numbers, but before test he wants to know for the given value how many numbers less than or equal to the given value have gcd(x, given_value) = 1?\n\nSo, for example, given_value = 10, then gcd(x,10)=1, for x=1,3,7,9. So answer is 4.\n\nInput\n\nThe first line contains the number of test cases T. The next T lines contain the number given_value for each test case.\n\nOutput\n\nFor each test case output the answer.\n\nConstraints\n\n1 ≤ given_value ≤ 10^9\n1 ≤ T ≤ 50",
+      "public_tests": {
+        "input": ["10", "2", "5", "8"],
+        "output": ["4", "1", "4", "4"]
+      },
+      "private_tests": {
+        "input": [],
+        "output": []
+      },
+      "generated_tests": {
+        "input": [],
+        "output": []
+      },
+      "source": 1,
+      "difficulty": 2,
+      "solutions": {
+        "language": [1],
+        "solution": [
+          "import math\ndef prime_factors(n):\n    factors = []\n    while n % 2 == 0:\n        factors.append(2)\n        n = n // 2\n    for i in range(3,int(math.sqrt(n))+1,2):\n        while n % i == 0:\n            factors.append(i)\n            n = n // i\n    if n > 2:\n        factors.append(n)\n    return factors\ndef euler_phi(n):\n    if n == 1:\n        return 1\n    phi = n\n    p = prime_factors(n)\n    for prime in set(p):\n        phi = phi * (prime - 1) / prime\n    return phi\nT = int(input())\nfor _ in range(T):\n    n = int(input())\n    print euler_phi(n)"
+        ]
+      },
+      "incorrect_solutions": {
+        "language": [],
+        "solution": []
+      },
+      "cf_contest_id": 0,
+      "cf_index": "",
+      "cf_points": 0.0,
+      "cf_rating": 0,
+      "cf_tags": [],
+      "is_description_translated": false,
+      "untranslated_description": "",
+      "time_limit": null,
+      "memory_limit_bytes": 0,
+      "input_file": "",
+      "output_file": ""
+    }
+  }
+]

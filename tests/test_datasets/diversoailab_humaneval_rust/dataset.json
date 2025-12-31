@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "Write a function that takes an array of integers and returns the sum of all even numbers in the array."
+  },
+  {
+    "prompt": "Implement a function that checks if a given string is a palindrome, ignoring case and non-alphanumeric characters."
+  },
+  {
+    "prompt": "Create a function that calculates the factorial of a non-negative integer using recursion."
+  },
+  {
+    "prompt": "Write a function that takes two strings and returns the longest common prefix between them."
+  },
+  {
+    "prompt": "Implement a function that reverses a linked list iteratively."
+  },
+  {
+    "prompt": "Create a function that finds all prime numbers up to a given number using the Sieve of Eratosthenes algorithm."
+  },
+  {
+    "prompt": "Write a function that sorts an array of integers using the quicksort algorithm."
+  },
+  {
+    "prompt": "Implement a function that checks if a binary tree is balanced."
+  },
+  {
+    "prompt": "Create a function that finds the longest increasing subsequence in an array of integers."
+  },
+  {
+    "prompt": "Write a function that determines if two strings are anagrams of each other."
+  }
+]

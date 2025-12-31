@@ -188,7 +188,7 @@ def test_yaml_direct_loading():
     assert calib_config.max_seq_length == 8192
     assert calib_config.shuffle is True
     assert calib_config.seed == 42
-    assert len(calib_config.datasets) == 5
+    assert len(calib_config.datasets) == 8
 
     print(f"✅ Configuration has {len(calib_config.datasets)} datasets as expected")
 
@@ -209,8 +209,8 @@ def test_problematic_mixed_dataset():
     calib_config = CalibrationSetConfig.from_file("tests/test_datasets/t_calibrate_diverse_columns.yaml")
 
     # Verify all datasets are loaded
-    assert len(calib_config.datasets) == 5
-    print("✅ Configuration loaded with 5 diverse datasets")
+    assert len(calib_config.datasets) == 8
+    print("✅ Configuration loaded with 8 diverse datasets")
 
     # Try to create calibration set - this should now pass with our fix
     try:
@@ -218,7 +218,7 @@ def test_problematic_mixed_dataset():
         print("✅ Successfully created calibration set with mixed datasets")
 
         # Verify the set was created correctly
-        assert calib_set.total_num_samples == 15  # 5 datasets × 3 samples each
+        assert calib_set.total_num_samples == 38  # 6 datasets × 3 samples each + 2 datasets × 10 samples each = 18 + 20 = 38
         print("✅ Calibration set has correct number of samples")
 
         # Verify that all formatted entries are lists (not dicts)

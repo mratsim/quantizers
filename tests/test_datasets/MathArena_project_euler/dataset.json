@@ -1,0 +1,32 @@
+[
+  {
+    "problem": "Find the sum of all the multiples of 3 or 5 below 1000."
+  },
+  {
+    "problem": "By considering the terms in the Fibonacci sequence whose values do not exceed four million, find the sum of the even-valued terms."
+  },
+  {
+    "problem": "What is the largest prime factor of the number 600851475143?"
+  },
+  {
+    "problem": "Find the largest palindrome made from the product of two 3-digit numbers."
+  },
+  {
+    "problem": "What is the smallest number divisible by each of the numbers from 1 to 20?"
+  },
+  {
+    "problem": "Find the difference between the sum of the squares of the first one hundred natural numbers and the square of the sum."
+  },
+  {
+    "problem": "Find the 10001st prime number."
+  },
+  {
+    "problem": "Discover the longest product of adjacent digits in the 1000-digit number."
+  },
+  {
+    "problem": "Find the pythagorean triplet {a, b, c} for which a + b + c = 1000."
+  },
+  {
+    "problem": "What is the sum of the digits of the number 2^1000?"
+  }
+]
