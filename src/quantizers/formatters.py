@@ -49,6 +49,9 @@ class DatasetFmt:
         system_prompt = data[columns[0]]
         conversations = data[columns[1]]
 
+        # Get logger for this function
+        logger = logging.getLogger(__name__)
+
         messages = []
 
         # Add system prompt if present
@@ -69,13 +72,19 @@ class DatasetFmt:
                             "user": "user",
                             "assistant": "assistant",
                             "system": "system",
-                            "tool": "assistant",  # Tool responses can be as assistant messages
+                            "tool": "tool",  # Preserve tool role for models that support it
                         }
                         if role in role_map:
                             messages.append({"role": role_map[role], "content": content})
+                        else:
+                            logger.warning(f"Skipping message with unknown role: {role}")
                     # Handle standard format with "role" and "content" keys
                     elif "role" in msg and "content" in msg:
-                        messages.append({"role": msg["role"], "content": msg["content"]})
+                        role = msg["role"]
+                        if role in ["system", "user", "assistant", "tool"]:
+                            messages.append({"role": role, "content": msg["content"]})
+                        else:
+                            logger.warning(f"Skipping message with invalid role: {role}")
 
         return messages
 
