@@ -302,7 +302,7 @@ def test_toolace_diverse_columns():
         seed=42,
         datasets=[
             DatasetEntryConfig(
-                dataset=str(Path(__file__).parent / "test_datasets" / "toolace_sample"),
+                dataset=str(Path(__file__).parent / "test_datasets" / "toolace"),
                 split="train",
                 columns=["system", "conversations"],  # Specific column names for ToolACE
                 formatter="chat_completion_with_sysprompt",

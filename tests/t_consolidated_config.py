@@ -283,7 +283,7 @@ def test_toolace_config():
     print(f"✅ Successfully loaded configuration with {len(config.datasets)} datasets")
 
     # Check that the expected dataset is present
-    expected_dataset = "tests/test_datasets/toolace_sample"
+    expected_dataset = "tests/test_datasets/toolace"
     found_datasets = [ds.dataset for ds in config.datasets]
 
     print(f"Found datasets: {found_datasets}")
