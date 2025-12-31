@@ -577,7 +577,79 @@ def test_formatter_with_diverse_column_names():
         assert "input_ids" in tokenized_dataset.column_names
         assert "formatted" not in tokenized_dataset.column_names
 
-        print("✅ Formatters correctly handle diverse column names")
+        print("\n✅ Formatters correctly handle diverse column names")
+
+
+def test_chat_completion_with_sysprompt_formatter():
+    """Test that chat completion with system prompt formatter works correctly."""
+    print("\n=== Testing Chat Completion with System Prompt Formatter ===")
+
+    # Test data that matches ToolACE format
+    toolace_data = {
+        "system": "You are an expert in composing functions. You are given a question and a set of possible functions.",
+        "conversations": [
+            {"role": "user", "content": "I need to calculate something."},
+            {"role": "assistant", "content": "I can help you with that."},
+        ],
+    }
+
+    # Test with correct column names
+    columns = ["system", "conversations"]
+    result = DatasetFmt.chat_completion_with_sysprompt(columns, toolace_data)
+
+    # Verify the result structure
+    assert isinstance(result, list), "Result should be a list of messages"
+    assert len(result) == 3, "Should have system and 2 conversation messages"
+
+    # Check system message
+    assert result[0]["role"] == "system"
+    assert result[0]["content"] == toolace_data["system"]
+
+    # Check conversation messages
+    assert result[1]["role"] == "user"
+    assert result[1]["content"] == toolace_data["conversations"][0]["content"]
+
+    assert result[2]["role"] == "assistant"
+    assert result[2]["content"] == toolace_data["conversations"][1]["content"]
+
+    print("✅ Chat completion with system prompt formatter works correctly")
+
+    # Test with different column names
+    different_columns = ["sys_prompt", "chat_history"]
+    different_data = {
+        "sys_prompt": "You are a helpful assistant.",
+        "chat_history": [
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi there"},
+        ],
+    }
+
+    result2 = DatasetFmt.chat_completion_with_sysprompt(different_columns, different_data)
+
+    assert len(result2) == 3
+    assert result2[0]["role"] == "system"
+    assert result2[0]["content"] == different_data["sys_prompt"]
+
+    print("✅ Formatter works with different column names")
+
+    # Test with missing data
+    partial_data = {"system": "Only system prompt", "conversations": []}
+
+    result3 = DatasetFmt.chat_completion_with_sysprompt(columns, partial_data)
+
+    assert len(result3) == 1, "Should only have system message"
+    assert result3[0]["role"] == "system"
+
+    print("✅ Formatter handles missing conversation data")
+
+    # Test error handling with wrong column count
+    try:
+        DatasetFmt.chat_completion_with_sysprompt(["only_one_column"], toolace_data)
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "requires exactly 2 columns" in str(e)
+
+    print("✅ Error handling works for incorrect column count")
 
 
 if __name__ == "__main__":
@@ -598,6 +670,7 @@ if __name__ == "__main__":
         test_calibration_set_with_dataset_columns()
         test_formatter_with_diverse_column_names()
 
+        test_chat_completion_with_sysprompt_formatter()
         print("\n🎉 All formatter tests passed!")
     except Exception as e:
         print(f"\n❌ Test failed: {e}")

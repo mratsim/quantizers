@@ -1,0 +1,235 @@
+[
+  {
+    "system": "You are an expert in composing functions. You are given a question and a set of possible functions. \nBased on the question, you will need to make one or more function/tool calls to achieve the purpose. \nIf none of the function can be used, point it out. If the given question lacks the parameters required by the function,\nalso point it out. You should only return the function call in tools call sections.\nHere is a list of functions in JSON format that you can invoke:\n[{\"name\": \"newAddress\", \"description\": \"Generates a new Ethereum address that can be used to send or receive funds. Do not lose the password! We can't restore access to an address if you lose it.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"password\": {\"description\": \"The password for the new Ethereum address\", \"type\": \"string\"}}, \"required\": [\"password\"]}, \"required\": null}, {\"name\": \"Market Trends API\", \"description\": \"Get the latest market trends and relevant news for a specified country and language.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"trend_type\": {\"description\": \"Trend type.\", \"type\": \"string\", \"enum\": [\"MARKET_INDEXES\", \"MOST_ACTIVE\", \"GAINERS\", \"LOSERS\", \"CRYPTO\", \"CURRENCIES\", \"CLIMATE_LEADERS\"]}, \"country\": {\"description\": \"The country for which to get trends, specified as a 2-letter country code - see ISO 3166.\", \"type\": \"string\", \"default\": \"us\"}, \"language\": {\"description\": \"The language to use for the results, specified as a 2-letter language code - see ISO 639-1.\", \"type\": \"string\", \"default\": \"en\"}}, \"required\": [\"trend_type\"]}, \"required\": null}, {\"name\": \"Get Futures Prices\", \"description\": \"Retrieve a list of current futures prices for various financial instruments.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"instrument_type\": {\"description\": \"Type of financial instrument (e.g., commodity, currency, index)\", \"type\": \"string\"}, \"exchange\": {\"description\": \"Name of the exchange (e.g., CME, ICE, NYMEX)\", \"type\": \"string\"}, \"start_string\": {\"description\": \"Start string for the price data (YYYY-MM-DD)\", \"type\": \"string\"}, \"end_string\": {\"description\": \"End string for the price data (YYYY-MM-DD)\", \"type\": \"string\"}}, \"required\": [\"instrument_type\", \"exchange\"]}, \"required\": null}, {\"name\": \"SEC Filings\", \"description\": \"Returns a list of SEC Filings for the requested company, including filing types, strings, and documents.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"identifier\": {\"description\": \"Publicly traded company's stock symbol or Central Index Key (CIK)\", \"type\": \"string\", \"default\": \"aapl\"}}, \"required\": [\"identifier\"]}, \"required\": null}, {\"name\": \"United States Away from Home Mobility API\", \"description\": \"Retrieve daily data on the percentage change in time spent away from home in the United States, providing insights into the economic impact of the COVID-19 pandemic.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"string\": {\"description\": \"The string for which to retrieve data (format: YYYY-MM-DD)\", \"type\": \"string\"}, \"state\": {\"description\": \"The state for which to retrieve data (optional, default: all states)\", \"type\": \"string\"}}, \"required\": [\"string\"]}, \"required\": null}, {\"name\": \"Calculate Sales Tax\", \"description\": \"Retrieves the sales tax rate applicable to a specific address. This API accepts address inputs to deliver up-to-string, relevant local sales tax rates instantly.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"country\": {\"description\": \"Set to one of the country codes listed in Supported Countries.\", \"type\": \"string\", \"default\": \"US\"}, \"city\": {\"description\": \"City name\", \"type\": \"string\", \"default\": \"Meridian\"}, \"zip\": {\"description\": \"Zip code\", \"type\": \"string\", \"default\": \"83646\"}, \"street\": {\"description\": \"Street address\", \"type\": \"string\", \"default\": \"936 Storey Ave\"}}, \"required\": [\"country\"]}, \"required\": null}]. \nShould you decide to return the function call(s). \nPut it in the format of [func1(params_name=params_value, params_name2=params_value2...), func2(params)]\n\nNO other text MUST be included. \n",
+    "conversations": [
+      {
+        "from": "user",
+        "value": "I'm considering investing and I'd like to know what's happening in the market right now. Could you get me the top market trends in the US?"
+      },
+      {
+        "from": "assistant",
+        "value": "[Market Trends API(trend_type=\"MARKET_INDEXES\", country=\"us\")]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"Market Trends API\", \"results\": {\"trends\": [{\"name\": \"S&P 500\", \"description\": \"Standard & Poor's 500 Index is a market-capitalization-weighted index of the 500 largest U.S. publicly traded companies.\", \"data\": {\"current_value\": \"4172.80\", \"percentage_change\": \"+0.68%\"}}, {\"name\": \"DOW J\", \"description\": \"Dow Jones Industrial Average is a price-weighted average of 30 blue-chip stocks that are generally the leaders in their industry.\", \"data\": {\"current_value\": \"34479.60\", \"percentage_change\": \"+0.47%\"}}, {\"name\": \"NASDAQ\", \"description\": \"The NASDAQ Composite is a broad-based capitalization-weighted index of stocks in all three NASDAQ tiers: Global Select, Global Market and Capital Market.\", \"data\": {\"current_value\": \"13691.30\", \"percentage_change\": \"+0.90%\"}}]}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Here are the top Market Trends in the US right now:\n\n1. **S&P 500**: The Standard & Poor's 500 Index is a market-capitalization-weighted index of the 500 largest U.S. publicly traded companies. Its current value is 4172.80 with a percentage change of +0.68%.\n\n2. **DOW J**: The Dow Jones Industrial Average is a price-weighted average of 30 blue-chip stocks that are generally the leaders in their industry. Its current value is 34479.60 with a percentage change of +0.47%.\n\n3. **NASDAQ**: The NASDAQ Composite is a broad-based capitalization-weighted index of stocks in all three NASDAQ tiers: Global Select, Global Market and Capital Market. Its current value is 13691.30 with a percentage change of +0.90%.\n\nThis information can help you make informed decisions about your investment plans."
+      },
+      {
+        "from": "user",
+        "value": "Could you explain what SEC filings are and how they might be useful for an investor like me?"
+      },
+      {
+        "from": "assistant",
+        "value": "Sure, SEC filings refer to official documents that are submitted by publicly traded companies to the U.S. Securities and Exchange Commission (SEC). These documents provide valuable information about a company's financial performance, its management team, ownership, key business operations, market competition, and future prospects. They are typically comprehensive and contain detailed information that a company is legally required to disclose to the public.\n\nInvestors like you can use these filings to better understand a company's true financial health and operations. Information you might glean from SEC filings includes:\n\n1. **Financial Statements**: Balance sheets, income statements, and cash flow statements can help you analyze the financial health and profitability of a company.\n\n2. **Management Discussion and Analysis (MD&A)**: This section offers management's perspective on the company's performance, including explanations of financial results, significant changes, market risk exposures, and future operations and strategy.\n\n3. **Risk Factors**: In the filing, companies are required to disclose potential risks of investing in their company. Insight into the risks the company is facing can help you make a more informed decision about investing.\n\n4. **Major Shareholders**: Companies must disclose the list of major shareholders. High ownership of shares by insiders could indicate confidence in the business, while large institutional ownership could suggest stability.\n\n5. **Director and Executive Compensation**: Information on executive remuneration packages can indicate how well the company\u2019s interests are aligned with its executive team.\n\nSEC filings are a fundamental part of investment research and due diligence. They can provide deep insights into a company that may not be immediately obvious from simply looking at its earnings or share price. It's essential for investors to understand how to read and interpret these filings to make informed investment decisions."
+      },
+      {
+        "from": "user",
+        "value": "So, a couple of years ago, I invested in a tech startup without doing any proper research. It seemed like a hot trend at the time, but the company went belly up within a year. I ended up losing a good chunk of money. What are your thoughts on that?"
+      },
+      {
+        "from": "assistant",
+        "value": "As an assistant, I'm here to provide advice and guide you in your financial decisions. Here are my thoughts:\n\nInvesting in startups or any company without conducting proper research carries high risk. Although some startups have very high growth potentials and can provide excellent returns, many also fail within a few years of operation. This is especially the case in the tech industry where competition is stiff and technology changes rapidly.\n\nThat being said, your past experience with the tech startup is an important lesson in the necessity of conducting thorough due diligence before investing. Here are some steps you might take before future investments:\n\n1. **Understand the Business**: Make sure you understand the company's business model, its products or services, the market it operates in and its competition.\n\n2. **Financial Analysis**: Review financial statements, revenue, profitability, growth rates, debt levels, and cash flow. \n\n3. **Management Review**: It's important to assess the quality of the management team and their plans for the company.\n\n4. **Use of Tools**: Utilize tools like the SEC Filings tool to retrieve important documents to get detailed information about a company's operations, management and financials.\n\n5. **Risk vs Reward**: Analyze the investment's potential returns in light of the potential risk. High-risk investments should have the potential for higher returns.\n\nRemember, all investments carry a degree of risk. As such, it can be beneficial to diversify investments to spread risk and not put all of your money into one company or sector. It may also be helpful to seek advice from financial advisors or use trusted financial services to ensure informed decisions.\n\nGoing forward, employing these strategies could help reduce risk and maximize potential returns on your investments."
+      },
+      {
+        "from": "user",
+        "value": "Could you provide me with the SEC filings for Apple? Also, I\u2019m curious about how COVID-19 has affected people's mobility away from home in the US."
+      },
+      {
+        "from": "assistant",
+        "value": "[SEC Filings(identifier=\"AAPL\"), United States Away from Home Mobility API(string=\"2025-05-17\")]"
+      }
+    ]
+  },
+  {
+    "system": "You are an expert in composing functions. You are given a question and a set of possible functions. \nBased on the question, you will need to make one or more function/tool calls to achieve the purpose. \nIf none of the function can be used, point it out. If the given question lacks the parameters required by the function,\nalso point it out. You should only return the function call in tools call sections.\nHere is a list of functions in JSON format that you can invoke:\n[{\"name\": \"Quotes by Keywords\", \"description\": \"Returns a list of quotes containing the specified keyword.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"word\": {\"description\": \"The keyword to search for in quotes.\", \"type\": \"string\"}}, \"required\": [\"word\"]}, \"required\": null}, {\"name\": \"Get Zip Code Information\", \"description\": \"Retrieve information about a specific zip code in the United States.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"country\": {\"description\": \"The country code (default: 'us')\", \"type\": \"string\"}, \"postal_code\": {\"description\": \"The zip code (default: '90210')\", \"type\": \"string\"}}, \"required\": [\"country\", \"postal_code\"]}, \"required\": null}, {\"name\": \"Weekly Hot 100 Chart\", \"description\": \"Retrieve the Billboard Hot 100 chart for a specific string.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"string\": {\"description\": \"The string for which to retrieve the chart (YYYY-MM-DD)\", \"type\": \"string\"}}, \"required\": [\"string\"]}, \"required\": null}, {\"name\": \"Get Cars Information\", \"description\": \"This API returns a list of cars information based on the provided parameters.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"model\": {\"description\": \"The model of the vehicle.\", \"type\": \"string\"}, \"make\": {\"description\": \"The manufacturer of the vehicle.\", \"type\": \"string\"}, \"year\": {\"description\": \"The model year of the vehicle.\", \"type\": \"string\"}, \"fuel_type\": {\"description\": \"The type of fuel used.\", \"type\": \"string\"}, \"drive\": {\"description\": \"The drive transmission type.\", \"type\": \"string\"}, \"transmission\": {\"description\": \"The type of transmission.\", \"type\": \"string\"}, \"cylinders\": {\"description\": \"The number of cylinders.\", \"type\": \"float\"}, \"min_city_mpg\": {\"description\": \"Minimum city fuel efficiency in miles per gallon.\", \"type\": \"float\"}, \"max_city_mpg\": {\"description\": \"Maximum city fuel efficiency in miles per gallon.\", \"type\": \"float\"}, \"min_hwy_mpg\": {\"description\": \"Minimum highway fuel efficiency in miles per gallon.\", \"type\": \"float\"}, \"max_hwy_mpg\": {\"description\": \"Maximum highway fuel efficiency in miles per gallon.\", \"type\": \"float\"}, \"min_comb_mpg\": {\"description\": \"Minimum combination (city + highway) fuel efficiency in miles per gallon.\", \"type\": \"float\"}, \"max_comb_mpg\": {\"description\": \"Maximum combination (city + highway) fuel efficiency in miles per gallon.\", \"type\": \"float\"}, \"limit\": {\"description\": \"How many results to return.\", \"type\": \"string\"}}, \"required\": []}, \"required\": null}, {\"name\": \"Lorem Ipsum Generator\", \"description\": \"Generate a specified number of words of Lorem Ipsum text\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"amount\": {\"description\": \"The number of words to generate\", \"type\": \"int\"}}, \"required\": [\"amount\"]}, \"required\": null}, {\"name\": \"Crawl\", \"description\": \"Perform a Google search and return the HTML source of the results page.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"query\": {\"description\": \"The search query to perform.\", \"type\": \"string\"}}, \"required\": [\"query\"]}, \"required\": null}]. \nShould you decide to return the function call(s). \nPut it in the format of [func1(params_name=params_value, params_name2=params_value2...), func2(params)]\n\nNO other text MUST be included. \n",
+    "conversations": [
+      {
+        "from": "user",
+        "value": "Could you please find me some quotes about \"inspiration\"?"
+      },
+      {
+        "from": "assistant",
+        "value": "[Quotes by Keywords(word=\"inspiration\")]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"Quotes by Keywords\", \"results\": {\"quotes\": [{\"text\": \"The only way to achieve the impossible is to believe it is possible.\", \"author\": \"Charles Kingsleigh\"}, {\"text\": \"Don't watch the clock; do what it does. Keep going.\", \"author\": \"Sam Levenson\"}, {\"text\": \"Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.\", \"author\": \"Albert Schweitzer\"}]}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Here are some inspiration quotes for you:\n\n1. \"The only way to achieve the impossible is to believe it is possible.\" - Charles Kingsleigh\n2. \"Don't watch the clock; do what it does. Keep going.\" - Sam Levenson\n3. \"Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.\" - Albert Schweitzer\n\nFeel free to reflect on these or let me know if you need more quotes or information on another topic!"
+      },
+      {
+        "from": "user",
+        "value": "Could you summarize the meaning of the quote by Albert Schweitzer?"
+      },
+      {
+        "from": "assistant",
+        "value": "The quote by Albert Schweitzer, \"Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful,\" emphasizes that true success in life comes from finding joy and fulfillment in what you do. Rather than viewing success as a source of happiness, Schweitzer suggests that happiness itself should be the foundation for achieving success. Essentially, when you engage in activities that make you happy and passionate, you're more likely to excel and achieve success in those ventures."
+      },
+      {
+        "from": "user",
+        "value": "Can you dig up some juicy details about the zip code 10001? I'm doing a mail-order flamingo business plan, don't ask why."
+      },
+      {
+        "from": "assistant",
+        "value": "[Get Zip Code Information(country=\"us\", postal_code=\"10001\")]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"Get Zip Code Information\", \"results\": {\"information\": \"Zip code information for 10001, USA\", \"latitude\": 40.748817, \"longitude\": -73.985428, \"city\": \"New York\", \"state\": \"NY\", \"county\": \"New York\"}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Here's the detailed information about the zip code 10001, which will be helpful for your mail-order flamingo business plan:\n\n**Zip Code Information for 10001, USA:**\n- **City:** New York\n- **State:** NY (New York)\n- **County:** New York\n- **Latitude:** 40.748817\n- **Longitude:** -73.985428\n\nThis data provides a clear overview of where the zip code is located and its associated geographic details. If you need more assistance or information on any other aspect of your business plan, feel free to ask!"
+      }
+    ]
+  },
+  {
+    "system": "You are an expert in composing functions. You are given a question and a set of possible functions. \nBased on the question, you will need to make one or more function/tool calls to achieve the purpose. \nIf none of the function can be used, point it out. If the given question lacks the parameters required by the function,\nalso point it out. You should only return the function call in tools call sections.\nHere is a list of functions in JSON format that you can invoke:\n[{\"name\": \"GetCompetitions\", \"description\": \"Retrieve a list of football competitions that are televised in Peru.\", \"parameters\": {\"type\": \"dict\", \"properties\": {}, \"required\": []}, \"required\": null}, {\"name\": \"Get Manager Placeholder Image\", \"description\": \"Retrieve the manager placeholder image in PNG format for a specific sport.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"sport\": {\"description\": \"The name of the sport for which the manager placeholder image is required.\", \"type\": \"string\"}}, \"required\": [\"sport\"]}, \"required\": null}, {\"name\": \"Search Competition API\", \"description\": \"Search for competitions in the sports domain\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"name\": {\"description\": \"The name of the competition to search for\", \"type\": \"string\"}}, \"required\": [\"name\"]}, \"required\": null}, {\"name\": \"Get Category Image\", \"description\": \"Retrieve a category image for a specific sport or league.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"slug\": {\"description\": \"Slug of the sport or league, e.g. `france` `champions-league` `intl`.\", \"type\": \"string\", \"default\": \"france\"}}, \"required\": [\"slug\"]}, \"required\": null}]. \nShould you decide to return the function call(s). \nPut it in the format of [func1(params_name=params_value, params_name2=params_value2...), func2(params)]\n\nNO other text MUST be included. \n",
+    "conversations": [
+      {
+        "from": "user",
+        "value": "Hey, can you show me the list of football competitions that are currently televised in Peru?"
+      },
+      {
+        "from": "assistant",
+        "value": "[GetCompetitions()]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"GetCompetitions\", \"results\": {\"competitions\": [{\"id\": 1, \"name\": \"Copa Libertadores\", \"startDate\": \"2023-02-15\", \"endDate\": \"2023-11-20\"}, {\"id\": 2, \"name\": \"Copa Sudamericana\", \"startDate\": \"2023-03-05\", \"endDate\": \"2023-10-25\"}, {\"id\": 3, \"name\": \"Liga 1 Peru\", \"startDate\": \"2023-02-03\", \"endDate\": \"2023-12-05\"}]}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Here are the football competitions that are currently televised in Peru:\n\n1. Competition: Copa Libertadores\n   - Start Date: 2023-02-15\n   - End Date: 2023-11-20\n\n2. Competition: Copa Sudamericana\n   - Start Date: 2023-03-05\n   - End Date: 2023-10-25\n\n3. Competition: Liga 1 Peru\n   - Start Date: 2023-02-03\n   - End Date: 2023-12-05\n\nDo note that these dates represent the duration of the competitions for the given year. Is there anything else you would like to know?"
+      },
+      {
+        "from": "user",
+        "value": "How important are manager images in sports marketing and branding?"
+      },
+      {
+        "from": "assistant",
+        "value": "Manager images are quite significant in sports marketing and branding for several reasons:\n\n1. **Identity and Representation**: The image of a manager can become synonymous with the team's identity. It represents leadership and can convey the team's ethos and approach to the sport.\n\n2. **Fan Engagement**: Fans often form emotional connections with team managers. Images used in promotional materials can enhance this bond, making fans feel more connected to the team.\n\n3. **Merchandising**: The use of a manager's image on merchandise can boost sales. Fans are likely to purchase products featuring a well-respected or popular manager as a sign of support or admiration.\n\n4. **Media Relations**: Managers often serve as the face of the team in media appearances. Their image is crucial to creating a positive public perception and can influence media coverage and public relations efforts.\n\n5. **Sponsorship and Partnerships**: A manager with a strong public image can attract sponsorships and partnerships. Brands are more likely to collaborate with teams whose managers are well-regarded and have a positive public image.\n\nOverall, manager images are vital assets in sports branding, helping to shape team image and fan loyalty, while also playing a key role in commercial strategies. If you need any more specific information or examples, feel free to ask!"
+      },
+      {
+        "from": "user",
+        "value": "I'd like to see this in practice! Can you fetch me a manager placeholder image for football? Let's bring these theories to life with some quality pixels."
+      },
+      {
+        "from": "assistant",
+        "value": "[Get Manager Placeholder Image(sport=\"football\")]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"Get Manager Placeholder Image\", \"results\": {\"image\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQAQMAAAAew5lpAAAAA1BMVEX///+nxBvIAAAASElEQVR4nO3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIB3AABUexBM.jpg\", \"sport_name\": \"football\"}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Here is the manager placeholder image for football:\n\n![Manager Placeholder Image for Football](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQAQMAAAAew5lpAAAAA1BMVEX///+nxBvIAAAASElEQVR4nO3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIB3AABUexBM.jpg)\n\nThis image can typically be used in promotional content, social media, and anywhere a generic representation of a football manager is needed, particularly when no specific individual's image is available. This helps maintain the branding focus while keeping a professional look in all communications."
+      }
+    ]
+  },
+  {
+    "system": "You are an expert in composing functions. You are given a question and a set of possible functions. \nBased on the question, you will need to make one or more function/tool calls to achieve the purpose. \nIf none of the function can be used, point it out. If the given question lacks the parameters required by the function,\nalso point it out. You should only return the function call in tools call sections.\nHere is a list of functions in JSON format that you can invoke:\n[{\"name\": \"GetFutureEvents\", \"description\": \"Retrieve a list of future Azure events, such as maintenance windows, upstrings, or other scheduled events.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"page\": {\"description\": \"The page number to retrieve (default: 1)\", \"type\": \"int\"}}, \"required\": [\"page\"]}, \"required\": null}, {\"name\": \"Get Languages for Country\", \"description\": \"Get a list of valid languages for a given country code.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"country\": {\"description\": \"Country code of the country to get languages for. See [all available country codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).\", \"type\": \"string\", \"default\": \"US\"}}, \"required\": [\"country\"]}, \"required\": null}, {\"name\": \"Get All Dog Breeds\", \"description\": \"This endpoint returns a list of all available dog breeds, along with their relevant information.\", \"parameters\": {\"type\": \"dict\", \"properties\": {}, \"required\": []}, \"required\": null}, {\"name\": \"Get LinkedIn Prostring by Sales Nav URL\", \"description\": \"Retrieves a LinkedIn user's prostring data, including experience, education history, skills, and company-related details, given their Sales Navigator URL.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"linkedin_url\": {\"description\": \"The LinkedIn Sales Navigator URL of the user to retrieve prostring data for.\", \"type\": \"string\"}}, \"required\": [\"linkedin_url\"]}, \"required\": null}, {\"name\": \"Get Companies by SIC Code\", \"description\": \"Retrieve a list of the top 100 companies that are related to a given SIC code.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"sic_code\": {\"description\": \"SIC code to lookup.\", \"type\": \"int\"}}, \"required\": [\"sic_code\"]}, \"required\": null}, {\"name\": \"Search Strong's Number API\", \"description\": \"Returns every verse containing the supplied Strong's number. Include LXX boolean option allows searching the Septuagint translation of the Old Testament when searching for a Greek word, enabling connections between New Testament words and Old Testament concepts.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"include-lxx\": {\"description\": \"Include LXX translation in search results (true/false)\", \"type\": \"boolean\", \"default\": true}, \"strongs-number\": {\"description\": \"The Strong's number to search for\", \"type\": \"string\"}}, \"required\": [\"include-lxx\", \"strongs-number\"]}, \"required\": null}]. \nShould you decide to return the function call(s). \nPut it in the format of [func1(params_name=params_value, params_name2=params_value2...), func2(params)]\n\nNO other text MUST be included. \n",
+    "conversations": [
+      {
+        "from": "user",
+        "value": "Could you provide me with a list of upcoming Azure events? Please start with the first page of results."
+      },
+      {
+        "from": "assistant",
+        "value": "[GetFutureEvents(page=1)]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"GetFutureEvents\", \"results\": {\"events\": [{\"id\": \"EVT123\", \"title\": \"Azure maintenance window\", \"description\": \"Planned maintenance on Azure compute resources in West US\", \"start_string\": \"2022-07-24T08:00:00Z\", \"end_string\": \"2022-07-24T12:00:00Z\"}, {\"id\": \"EVT124\", \"title\": \"Azure network upgrade\", \"description\": \"Network upgrade in Azure East US datacenters\", \"start_string\": \"2022-07-26T01:00:00Z\", \"end_string\": \"2022-07-26T05:00:00Z\"}]}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Here are the upcoming Azure events:\n\n1. **Event ID:** EVT123\n   - **Title:** Azure maintenance window\n   - **Description:** Planned maintenance on Azure compute resources in West US\n   - **Start Time:** 2022-07-24T08:00:00Z\n   - **End Time:** 2022-07-24T12:00:00Z\n\n2. **Event ID:** EVT124\n   - **Title:** Azure network upgrade\n   - **Description:** Network upgrade in Azure East US datacenters\n   - **Start Time:** 2022-07-26T01:00:00Z\n   - **End Time:** 2022-07-26T05:00:00Z\n\nIf you need further details or additional pages of events, please let me know!"
+      },
+      {
+        "from": "user",
+        "value": "Could you tell me what languages are commonly spoken in Brazil?"
+      },
+      {
+        "from": "assistant",
+        "value": "[Get Languages for Country(country=\"BR\")]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"Get Languages for Country\", \"results\": {\"languages\": [\"Portuguese\"]}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "In Brazil, the commonly spoken language is Portuguese. If you need more detailed information or additional languages, please let me know!"
+      },
+      {
+        "from": "user",
+        "value": "It's fascinating how languages shape our communication. Speaking of fascinating things, I recently discovered a deep affection for dogs. Do you have any information on various dog breeds?"
+      },
+      {
+        "from": "assistant",
+        "value": "[Get All Dog Breeds()]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"Get All Dog Breeds\", \"results\": {\"dog_breeds\": [{\"name\": \"Labrador Retriever\", \"description\": \"The Labrador Retriever is a friendly, outgoing, and high-spirited companion.\", \"image_url\": \"https://example.com/images/labrador_retriever.jpg\"}, {\"name\": \"German Shepherd\", \"description\": \"The German Shepherd is a breed of medium to large-sized working dog that originated in Germany.\", \"image_url\": \"https://example.com/images/german_shepherd.jpg\"}, {\"name\": \"Golden Retriever\", \"description\": \"The Golden Retriever is a large, friendly dog breed known for its tolerant attitude.\", \"image_url\": \"https://example.com/images/golden_retriever.jpg\"}, {\"name\": \"Bulldog\", \"description\": \"The Bulldog is a medium-sized breed of dog that is muscular, heavy, and has a wrinkled face.\", \"image_url\": \"https://example.com/images/bulldog.jpg\"}, {\"name\": \"Beagle\", \"description\": \"The Beagle is a breed of small hound that is similar in appearance to the larger foxhound.\", \"image_url\": \"https://example.com/images/beagle.jpg\"}, {\"name\": \"Poodle\", \"description\": \"The Poodle is a breed of dog known for its curly coat and high intelligence.\", \"image_url\": \"https://example.com/images/poodle.jpg\"}, {\"name\": \"Rottweiler\", \"description\": \"The Rottweiler is a breed of domestic dog, regarded as medium-to-large or large.\", \"image_url\": \"https://example.com/images/rottweiler.jpg\"}, {\"name\": \"Yorkshire Terrier\", \"description\": \"The Yorkshire Terrier is a small dog breed of terrier type, developed during the 19th century in Yorkshire, England.\", \"image_url\": \"https://example.com/images/yorkshire_terrier.jpg\"}, {\"name\": \"Boxer\", \"description\": \"The Boxer is a medium to large, short-haired breed of dog, developed in Germany.\", \"image_url\": \"https://example.com/images/boxer.jpg\"}, {\"name\": \"Dachshund\", \"description\": \"The Dachshund is a short-legged, long-bodied, hound-type dog breed.\", \"image_url\": \"https://example.com/images/dachshund.jpg\"}]}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Here are some popular dog breeds along with brief descriptions and images:\n\n1. **Labrador Retriever**\n   - **Description:** The Labrador Retriever is a friendly, outgoing, and high-spirited companion.\n   - ![Labrador Retriever](https://example.com/images/labrador_retriever.jpg)\n\n2. **German Shepherd**\n   - **Description:** The German Shepherd is a breed of medium to large-sized working dog that originated in Germany.\n   - ![German Shepherd](https://example.com/images/german_shepherd.jpg)\n\n3. **Golden Retriever**\n   - **Description:** The Golden Retriever is a large, friendly dog breed known for its tolerant attitude.\n   - ![Golden Retriever](https://example.com/images/golden_retriever.jpg)\n\n4. **Bulldog**\n   - **Description:** The Bulldog is a medium-sized breed of dog that is muscular, heavy, and has a wrinkled face.\n   - ![Bulldog](https://example.com/images/bulldog.jpg)\n\n5. **Beagle**\n   - **Description:** The Beagle is a breed of small hound that is similar in appearance to the larger foxhound.\n   - ![Beagle](https://example.com/images/beagle.jpg)\n\n6. **Poodle**\n   - **Description:** The Poodle is a breed of dog known for its curly coat and high intelligence.\n   - ![Poodle](https://example.com/images/poodle.jpg)\n\n7. **Rottweiler**\n   - **Description:** The Rottweiler is a breed of domestic dog, regarded as medium-to-large or large.\n   - ![Rottweiler](https://example.com/images/rottweiler.jpg)\n\n8. **Yorkshire Terrier**\n   - **Description:** The Yorkshire Terrier is a small dog breed of terrier type, developed during the 19th century in Yorkshire, England.\n   - ![Yorkshire Terrier](https://example.com/images/yorkshire_terrier.jpg)\n\n9. **Boxer**\n   - **Description:** The Boxer is a medium to large, short-haired breed of dog, developed in Germany.\n   - ![Boxer](https://example.com/images/boxer.jpg)\n\n10. **Dachshund**\n    - **Description:** The Dachshund is a short-legged, long-bodied, hound-type dog breed.\n    - ![Dachshund](https://example.com/images/dachshund.jpg)\n\nIf you need more information or details on any specific breed, feel free to ask!"
+      }
+    ]
+  },
+  {
+    "system": "You are an expert in composing functions. You are given a question and a set of possible functions. \nBased on the question, you will need to make one or more function/tool calls to achieve the purpose. \nIf none of the function can be used, point it out. If the given question lacks the parameters required by the function,\nalso point it out. You should only return the function call in tools call sections.\nHere is a list of functions in JSON format that you can invoke:\n[{\"name\": \"Get Synthesize\", \"description\": \"Synthesizes the provided text and returns the corresponding audio URL.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"text\": {\"description\": \"The text to be synthesized\", \"type\": \"string\"}}, \"required\": [\"text\"]}, \"required\": null}, {\"name\": \"Get Big Five Personality Test Questionnaire\", \"description\": \"Retrieve the Big Five Personality Test Questionnaire for personality analysis\", \"parameters\": {\"type\": \"dict\", \"properties\": {}, \"required\": []}, \"required\": null}, {\"name\": \"Detect Language\", \"description\": \"Detect the language of a given text with a confidence score\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"text\": {\"description\": \"The text to be analyzed for language detection\", \"type\": \"string\"}, \"detectedcount\": {\"description\": \"The number of languages to detect (default: 5)\", \"type\": \"float\", \"default\": 5.0}}, \"required\": [\"text\"]}, \"required\": null}, {\"name\": \"/madlibs-diceware\", \"description\": \"Generate a password using madlibs diceware. This API generates a password with a specified number of phrases, each consisting of an adverb, an adjective, and a noun.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"nphrase\": {\"description\": \"The number of phrases in the generated password. Accepted values are 1 and 2.\", \"type\": \"int\"}}, \"required\": [\"nphrase\"]}, \"required\": null}, {\"name\": \"DISC Personality Test Questionnaire\", \"description\": \"This API returns all questions for the DISC Personality Test, a widely used framework for understanding individual personalities and behaviors.\", \"parameters\": {\"type\": \"dict\", \"properties\": {\"language\": {\"description\": \"The language of the questionnaire (e.g., English, Spanish, French)\", \"type\": \"string\"}, \"question_type\": {\"description\": \"The type of question to return (e.g., multiple-choice, open-ended)\", \"type\": \"string\"}}, \"required\": [\"language\"]}, \"required\": null}]. \nShould you decide to return the function call(s). \nPut it in the format of [func1(params_name=params_value, params_name2=params_value2...), func2(params)]\n\nNO other text MUST be included. \n",
+    "conversations": [
+      {
+        "from": "user",
+        "value": "Can you generate a unique and memorable password for a new account I'm creating? Please use two phrases."
+      },
+      {
+        "from": "assistant",
+        "value": "[/madlibs-diceware(nphrase=2)]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"/madlibs-diceware\", \"results\": {\"password\": \"quickly-green-apple-slowly-red-banana\"}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Your unique and memorable password generated using two phrases is: `quickly-green-apple-slowly-red-banana`. Make sure to keep it secure and do not share it with others."
+      },
+      {
+        "from": "user",
+        "value": "By the way, you mentioned something about personality analysis. Could you tell me the difference between the Big Five and DISC personality tests?"
+      },
+      {
+        "from": "assistant",
+        "value": "Of course. The Big Five and DISC are two different personality models that are widely used in psychology and human resource fields.\n\n1. The Big Five Personality Test is based on five fundamental personality aspects: Openness, Conscientiousness, Extroversion, Agreeableness, and Neuroticism (often remembered by the acronym OCEAN). These traits are seen as enduring qualities of an individual. It provides a broad, comprehensive view of an individual's personality.\n\n2. On the other hand, DISC Personality Test is a behavior-based model that focuses on four key dimensions: Dominance, Influence, Steadiness, and Conscientiousness. It describes a person's behavior and emotion in different situations, such as how one responds to challenges, influences others, approaches rules and procedures, etc. \n\nWhile both measure distinct aspects of personality, they complement each other. The Big Five often explains 'why' we do what we do, whereas DISC often explains 'how' we generally behave or communicate. Both can be used together to get a more complete understanding of a person\u2019s character, motivations, and behaviors."
+      },
+      {
+        "from": "user",
+        "value": "That's interesting. Now, I have a personal quote that motivates me. Can you convert it to an audio file so that I can use it as my morning alarm? The quote is, \"Wake up with determination, go bed with satisfaction.\""
+      },
+      {
+        "from": "assistant",
+        "value": "[Get Synthesize(text=\"Wake up with determination, go bed with satisfaction.\")]"
+      },
+      {
+        "from": "tool",
+        "value": "[{\"name\": \"Get Synthesize\", \"results\": {\"audio_url\": \"https://synthesizedaudio.example.com/audio/1234567890\"}}]"
+      },
+      {
+        "from": "assistant",
+        "value": "Great! Here is the URL of the synthesized audio of your quote: [https://synthesizedaudio.example.com/audio/1234567890](https://synthesizedaudio.example.com/audio/1234567890). You can now use this as your morning alarm."
+      }
+    ]
+  }
+]

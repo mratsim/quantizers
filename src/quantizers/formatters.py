@@ -24,6 +24,71 @@ class DatasetFmt:
     """
 
     @staticmethod
+    def chat_completion_with_sysprompt(columns: List[str], data: Dict[str, Any]) -> List[Dict[str, str]]:
+        """
+        Convert chat completion with system prompt format to chat completion format.
+
+        This formatter is designed for datasets like ToolACE that have a separate system prompt
+        and chat completion conversations. It extracts both the system prompt and conversations
+        to create a complete chat history.
+
+        Args:
+            columns: Names of the columns containing the data (should have 2 columns: system and conversations)
+            data: Extracted data from the dataset (contains system prompt and chat completion)
+
+        Returns:
+            List of message dicts with "role" and "content" keys
+        """
+        # Enforce correct number of columns
+        if len(columns) != 2:
+            raise ValueError(
+                f"Chat completion with system prompt format requires exactly 2 columns, got {len(columns)}: {columns}"
+            )
+
+        # Extract system prompt and conversations using arbitrary column names - mandatory columns
+        system_prompt = data[columns[0]]
+        conversations = data[columns[1]]
+
+        # Get logger for this function
+        logger = logging.getLogger(__name__)
+
+        messages = []
+
+        # Add system prompt if present
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+
+        # Add conversation messages
+        if conversations:
+            for msg in conversations:
+                if isinstance(msg, dict):
+                    # Handle ToolACE format with "from" and "value" keys
+                    if "from" in msg and "value" in msg:
+                        role = msg.get("from", "")
+                        content = msg.get("value", "")
+
+                        # Map ToolACE roles to standard roles
+                        role_map = {
+                            "user": "user",
+                            "assistant": "assistant",
+                            "system": "system",
+                            "tool": "tool",  # Preserve tool role for models that support it
+                        }
+                        if role in role_map:
+                            messages.append({"role": role_map[role], "content": content})
+                        else:
+                            logger.warning(f"Skipping message with unknown role: {role}")
+                    # Handle standard format with "role" and "content" keys
+                    elif "role" in msg and "content" in msg:
+                        role = msg["role"]
+                        if role in ["system", "user", "assistant", "tool"]:
+                            messages.append({"role": role, "content": msg["content"]})
+                        else:
+                            logger.warning(f"Skipping message with invalid role: {role}")
+
+        return messages
+
+    @staticmethod
     def sharegpt(columns: List[str], data: Dict[str, Any]) -> List[Dict[str, str]]:
         """
         Convert ShareGPT conversation format to chat completion format.
@@ -133,6 +198,7 @@ class DatasetFmt:
             "sharegpt": DatasetFmt.sharegpt,
             "prompt_answer": DatasetFmt.prompt_answer,
             "chat_completion": DatasetFmt.chat_completion,
+            "chat_completion_with_sysprompt": DatasetFmt.chat_completion_with_sysprompt,
             "raw_text": DatasetFmt.raw_text,
             "deepmind_code_contests": DatasetFmt.deepmind_code_contests,
         }
