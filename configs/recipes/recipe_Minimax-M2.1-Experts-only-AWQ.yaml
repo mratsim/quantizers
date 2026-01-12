@@ -1,0 +1,34 @@
+# quantizers/configs/recipes/recipe_awq_w4a16.yaml
+#
+# AWQ (Activation-Aware Weight Quantization) recipe for 4-bit weights.
+# Targets MLP projections for quantization.
+#
+# Original Self-attention tensors are left in FP8.
+# See docs/quantization_tips_and_tricks.md on what to prioritize for MoE models
+#
+# Note, we might be restricted by compat
+# - iirc symmetric: false is not supported by MoE kernels
+
+default_stage:
+  default_modifiers:
+    AWQModifier:
+      config_groups:
+        mlp_experts_projections:
+          # Include only MLP expert weights for 4-bit quantization
+          targets: ["re:.*block_sparse_moe\\.experts\\.\\d+\\.(w1|w2|w3)$"]
+          weights:
+            num_bits: 4
+            type: int
+            symmetric: true
+            group_size: 32
+            strategy: group
+            dynamic: false
+            # actorder: group
+            observer: memoryless_minmax
+
+      mappings:
+        - smooth_layer: re:.*post_attention_layernorm$
+          balance_layers: ["re:.*w1$", "re:.*w3$"]
+        - smooth_layer: re:.*w3$
+          balance_layers: ["re:.*w2$"]
+      duo_scaling: true

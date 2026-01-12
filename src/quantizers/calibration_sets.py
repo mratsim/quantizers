@@ -480,6 +480,8 @@ class CalibrationSet:
             # Load dataset from HuggingFace,
             # nosec because we have to download from remote
             # user is expected to do due diligence
+
+            # TODO: log the dataset name and number (progress bar?)
             if isinstance(ds_config.dataset, str):
                 if ds_config.subset is not None:
                     # nosec B615, B703

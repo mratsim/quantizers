@@ -1,0 +1,21 @@
+# quantizers/configs/recipes/recipe_AR_W4A16G32.yaml
+#
+# AutoRound, targeting MLP projections and skipping self-attention
+# Ignores lm_head by default.
+default_stage:
+  default_modifiers:
+    AutoRoundModifier:
+      iters: 200
+      config_groups:
+        group_0:
+          targets: ["re:.*mlp\\.(down_proj|gate_proj|up_proj)$"]
+          weights:
+            num_bits: 4
+            type: int
+            symmetric: true
+            group_size: 32
+            strategy: group
+
+      # Layers to exclude from quantization
+      ignore:
+        - "lm_head"

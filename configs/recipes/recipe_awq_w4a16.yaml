@@ -21,7 +21,7 @@ modifiers:
           strategy: group
           dynamic: false
           # actorder: group
-          observer: mse
+          observer: memoryless_minmax
 
     # Layers to exclude from quantization
     ignore:

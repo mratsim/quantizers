@@ -17,13 +17,18 @@ from typing import Optional
 import torch
 from llmcompressor import oneshot
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers.models.auto import AutoProcessor
 
+# Add the quantizers directory to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from quantizers.calibration_sets import CalibrationSet
 from quantizers.config import load_quantization_config
 
 # Setup environment variables to avoid warnings
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True,max_split_size_mb:512")
+
+# os.environ["CUDA_VISIBLE_DEVICES"]="1" # TODO make it configurable
 
 
 def setup_logging(log_file: Optional[str] = None, level: int = logging.INFO):
@@ -83,6 +88,7 @@ def load_model_and_tokenizer(model_name: str, revision: str = "main"):
         revision=revision,
         torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,
+        trust_remote_code=True,
     )
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, revision=revision)
@@ -114,8 +120,19 @@ def main():
         recipe_name = Path(config.quantization.recipe).stem.replace("recipe_", "")
         output_dir = f"outputs/{model_name}-{recipe_name}"
 
-    # Load model and tokenizer
-    model, tokenizer = load_model_and_tokenizer(config.model.name, config.model.revision)
+    # Load quantization recipe from YAML file
+    recipe_path = config.quantization.recipe
+    if not Path(recipe_path).is_absolute() and args.config:
+        # Try relative to config file first
+        candidate = Path(args.config).parent / recipe_path
+        if not candidate.exists():
+            # Fall back to recipes subdirectory
+            candidate = Path(args.config).parent / "recipes" / recipe_path
+        recipe_path = str(candidate)
+
+    # Verify recipe file exists
+    if not Path(recipe_path).exists():
+        raise ValueError(f"Recipe file not found: {recipe_path}")
 
     # Load calibration set
     logging.info("Loading calibration set")
@@ -143,6 +160,9 @@ def main():
         save_time = time.time() - start_time
         logging.info(f"Saved calibration set to cache in {save_time:.2f} seconds")
 
+    # Load model and tokenizer
+    model, tokenizer = load_model_and_tokenizer(config.model.name, config.model.revision)
+
     # Get the tokenized dataset
     logging.info("Getting tokenized calibration dataset")
     start_time = time.time()
@@ -150,29 +170,20 @@ def main():
     tokenize_time = time.time() - start_time
     logging.info(f"Tokenized calibration dataset in {tokenize_time:.2f} seconds")
 
-    # Load quantization recipe from YAML file
-    recipe_path = config.quantization.recipe
-    if not Path(recipe_path).is_absolute() and args.config:
-        # Try relative to config file first
-        candidate = Path(args.config).parent / recipe_path
-        if not candidate.exists():
-            # Fall back to recipes subdirectory
-            candidate = Path(args.config).parent / "recipes" / recipe_path
-        recipe_path = str(candidate)
-
-    # Verify recipe file exists
-    if not Path(recipe_path).exists():
-        raise ValueError(f"Recipe file not found: {recipe_path}")
+    # Workaround trust_remote_code, we need the model tokenizer and processor
+    processor = AutoProcessor.from_pretrained(config.model.name, trust_remote_code=True)
 
     # Run quantization
     logging.info("Starting quantization")
     start_time = time.time()
     oneshot(
         model=model,
+        processor=processor,
         recipe=recipe_path,
         dataset=tokenized_dataset,
         max_seq_length=config.calibration_set_config.max_seq_length,
         num_calibration_samples=len(tokenized_dataset),
+        moe_calibrate_all_experts=True,
     )
     oneshot_time = time.time() - start_time
     logging.info(f"Completed quantization in {oneshot_time:.2f} seconds")

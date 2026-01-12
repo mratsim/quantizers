@@ -1,0 +1,25 @@
+# quantizers/configs/quantize_qwen3_30b_a3b_nvfp4.yaml
+#
+# Configuration for quantizing Qwen3-30B-A3B with NVFP4 mixed precision
+# Quantizes only MLP expert layers while preserving router/gate and self-attention in BF16
+# Based on the Hearthfire-24B-NVFP4 recipe approach
+#
+# This will not work in vLLM until https://github.com/vllm-project/vllm/pull/27608
+# You'll need to add a Linear target manually due to:
+# - https://github.com/vllm-project/vllm/issues/28197
+# - https://github.com/vllm-project/llm-compressor/issues/2163
+#
+# NVFP4 round-to-nearest is competitive with more elaborate methods:
+# - https://arxiv.org/pdf/2509.23202 - Bridging the Gap Between Promise and Performance for Microscaling FP4 Quantization
+# - https://arxiv.org/pdf/2512.02010 - Four Over Six: More Accurate NVFP4 Quantization with Adaptive Block Scaling
+#
+# We want to test SGLang
+
+model:
+  name: "Qwen/Qwen3-30B-A3B-Thinking-2507"
+  revision: "main"
+
+quantization:
+  recipe: "recipes/recipe_MoE_RTN_NVFP4.yaml"
+
+calibration_set: "configs/calibration_sets/test-calibrate_code.yaml"

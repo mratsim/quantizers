@@ -117,6 +117,7 @@ class DatasetFmt:
         messages = []
         for entry_idx, entry in enumerate(conversations):
             if not isinstance(entry, dict) or "from" not in entry or "value" not in entry:
+                # TODO: we need the dataset name
                 logger.warning(f"Skipping invalid conversation entry {entry_idx}: {entry}")
                 continue
 
@@ -178,7 +179,21 @@ class DatasetFmt:
             raise ValueError(f"Chat completion format requires exactly 1 column, got {len(columns)}: {columns}")
 
         # Extract messages from the specified mandatory column
-        return data[columns[0]]
+        chat = data[columns[0]]
+        result = []
+        for msg in chat:
+            if "reasoning_content" in msg:
+                reasoning_content = msg["reasoning_content"]
+                if reasoning_content:  # It may be None
+                    assert msg["role"] == "assistant", f"Invalid chat_completion entry: {msg}"  # nosec B101
+                    content = f"<think>{msg['reasoning_content']}</think>\n{msg.get('content', '')}"
+                    result.append({"role": "assistant", "content": content})
+                else:
+                    result.append({"role": msg["role"], "content": msg["content"]})
+            else:
+                result.append(msg)
+
+        return result
 
     @staticmethod
     def get_formatter(formatter_name: str):

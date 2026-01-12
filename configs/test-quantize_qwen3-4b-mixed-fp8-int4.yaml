@@ -6,8 +6,6 @@ model:
   revision: "main"
 
 quantization:
-  # TODO - fix resolution path
-  # ValueError: Recipe file not found: configs/recipes/recipe_Minimax-M2.1-AWQ-MixedPrec.yaml
-  recipe: "recipes/recipe_awq_w4a16.yaml"
+  recipe: "recipes/recipe_mixed_fp8_int4.yaml"
 
 calibration_set: "configs/calibration_sets/test-calibrate_multi_format.yaml"
