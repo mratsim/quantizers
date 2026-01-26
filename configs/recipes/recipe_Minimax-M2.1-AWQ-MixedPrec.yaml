@@ -1,0 +1,59 @@
+# quantizers/configs/recipes/recipe_awq_w4a16.yaml
+#
+# AWQ (Activation-Aware Weight Quantization) recipe for 4-bit weights.
+# Targets MLP projections for quantization.
+# Ignores lm_head by default.
+# 
+# Original Self-attention are in FP8, llmcompressor can only quantize from BF16
+# We requantize which is unfortunate but it should have minimal impact.
+# In the future we might have a tool to recombine.
+# 
+# Furthermore instead of plain FP8_DYNAMIC, we use AWQ FP8 quant:
+# - Because FP8 quantization requires fitting the whole model on GPU and I can't
+# - so we cheat with AWQ FP8
+# 
+# See docs/quantization_tips_and_tricks.md on what to prioritize for MoE models
+# 
+# Note, we might be restricted by compat
+# - iirc symmetric: false is not supported by MoE kernels
+
+default_stage:
+  default_modifiers:
+    AWQModifier:
+      config_groups:
+        self_attention_projections:
+          # Self-attention in 8-bit, significant impact on quality
+          targets: ["re:.*self_attn\\.(k_proj|o_proj|q_proj|v_proj)$"]
+          weights:
+            num_bits: 8
+            type: float
+            symmetric: true
+            group_size: 32
+            strategy: group
+            dynamic: false
+            # actorder: group
+            observer: memoryless_minmax
+  
+        mlp_experts_projections:
+          # Include only MLP expert weights for 4-bit quantization
+          targets: ["re:.*block_sparse_moe\\.experts\\.\\d+\\.(w1|w2|w3)$"]
+          weights:
+            num_bits: 4
+            type: int
+            symmetric: true
+            group_size: 32
+            strategy: group
+            dynamic: false
+            # actorder: group
+            observer: minmax
+  
+      mappings:
+        - smooth_layer: re:.*input_layernorm$
+          balance_layers: ['re:.*q_proj$', 're:.*k_proj$', 're:.*v_proj$']
+        - smooth_layer: re:.*v_proj$
+          balance_layers: ['re:.*o_proj$']
+        - smooth_layer: re:.*post_attention_layernorm$
+          balance_layers: ['re:.*w1$', 're:.*w3$']
+        - smooth_layer: re:.*w3$
+          balance_layers: ['re:.*w2$']
+      duo_scaling: true

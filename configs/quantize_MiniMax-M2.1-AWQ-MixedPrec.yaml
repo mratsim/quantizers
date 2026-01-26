@@ -1,0 +1,10 @@
+# Configuration for quantizing MiniMax-M2.1 with AWQ
+# Usage: python scripts/do_oneshot.py --config configs/quantize_MiniMax-M2.1-AWQ-MixedPrec.yaml
+
+model:
+  name: "<path-to>/MiniMax-M2.1-BF16"
+
+quantization:
+  recipe: "./recipes/recipe_Minimax-M2.1-AWQ-MixedPrec.yaml"
+
+calibration_set: "configs/calibration_sets/calibrate_software_engineer.yaml"
