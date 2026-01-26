@@ -1,0 +1,10 @@
+# Configuration for quantizing Qwen3-4B with AWQ
+# Usage: python scripts/do_oneshot.py --config configs/test-quantize_qwen3-4b-awq.yaml
+
+model:
+  name: "/home/beta/AI/local_models/MiniMax-M2.1-BF16"
+
+quantization:
+  recipe: "./recipes/recipe_Minimax-M2.1-AWQ-MixedPrec.yaml"
+
+calibration_set: "configs/calibration_sets/calibrate_software_engineer.yaml"
