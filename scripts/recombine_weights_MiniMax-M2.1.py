@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Recombine weights from FP8 and compressed-tensors models into a hybrid model.
+This is specialized for MiniMax-M2.1
 
 This script merges:
 - Most layers: FP8 weights from the source model
@@ -65,7 +66,9 @@ def get_pack_quantized_param_names(base_weight_name: str) -> list:
 
 
 def get_output_file_name(fp8_file: str) -> str:
-    """Transform FP8 file name to output file name (e.g., 00130 -> 00125)."""
+    """Transform FP8 file name to output file name (e.g., 00130 -> 00125).
+    This is specialized for MiniMax-M2.1
+    """
     return fp8_file.replace("00130", "00125")
 
 
@@ -281,6 +284,10 @@ class ModelMerger:
                 # Keep from FP8
                 merged[weight_name] = weight_tensor
 
+        # Update stats for index metadata
+        self.stats.total_tensors += len(merged)
+        self.stats.total_size += sum(t.numel() * t.element_size() for t in merged.values())
+
         # Evict old files to save memory
         self._evict_old_files(self.fp8_loaded)
         self._evict_old_files(self.compressed_loaded)
@@ -334,9 +341,9 @@ class ModelMerger:
         if not self.dry_run:
             weight_map = {}
             for file in output_files:
-                state = load_file(file, device=DEVICE)
+                state = load_file(file, device="cpu")
                 for name in state.keys():
-                    weight_map[name] = get_output_file_name(file)
+                    weight_map[name] = Path(file).name
 
             model_index = {
                 "metadata": {
