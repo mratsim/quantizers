@@ -1,0 +1,12 @@
+# quantizers/configs/recipes/recipe_Dense_NVFP4.yaml
+#
+# NVFP4 round-to-nearest is competitive with more elaborate methods:
+# - https://arxiv.org/pdf/2509.23202 - Bridging the Gap Between Promise and Performance for Microscaling FP4 Quantization
+# - https://arxiv.org/pdf/2512.02010 - Four Over Six: More Accurate NVFP4 Quantization with Adaptive Block Scaling
+
+default_stage:
+  default_modifiers:
+    QuantizationModifier:
+      scheme: NVFP4
+      targets: "Linear"
+      ignore: ["lm_head"]

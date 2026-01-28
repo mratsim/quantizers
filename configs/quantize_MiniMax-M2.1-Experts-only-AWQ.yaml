@@ -1,5 +1,5 @@
-# Configuration for quantizing Qwen3-4B with AWQ
-# Usage: python scripts/do_oneshot.py --config configs/test-quantize_qwen3-4b-awq.yaml
+# Configuration for quantizing MiniMax-M2.1 Experts-only with AWQ
+# Usage: python scripts/do_oneshot.py --config configs/quantize_MiniMax-M2.1-Experts-only-AWQ.yaml
 
 model:
   name: "<path-to>/MiniMax-M2.1-BF16"
