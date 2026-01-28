@@ -6,7 +6,7 @@ calibration_set:
   shuffle: true
   seed: 42
   datasets:
-    
+
     # Category Summary (Total: 590 samples)
     # =====================================================
     # General chat (24 samples - 4.07%)
@@ -22,19 +22,19 @@ calibration_set:
     # Humanities and Philosophy (8 samples - 1.36%)
     # Creative Writing, Adventure, Roleplay (13 samples - 2.20%)
     # General Knowledge and Pop Culture (2 samples - 0.34%)
-    # Specialized skills (4 samples - 0.68%)
+    # Behavioral skills (4 samples - 0.68%)
     # Misc (1 sample - 0.17%)
     # =====================================================
-    
+
     # Research
     # =====================================================
     # According to this presentation https://minjiazhang.github.io/courses/fall24-resource/slides/awq.pdf
     # AWQ only needs 64 samples to identify salient weights that need to be preserved.
-    # 
+    #
     # This research predates the boom of MoE (Mixture-of-Experts) models
-    # and it's safer to assume that 64 samples of a general dataset 
+    # and it's safer to assume that 64 samples of a general dataset
     # cannot properly identify salient weights of experts.
-    
+
     # General chat (24 samples)
     # ---------------------------------------------------------------------------
     - dataset: HuggingFaceH4/ultrachat_200k
@@ -211,6 +211,8 @@ calibration_set:
         prefix: *programming_languages
 
     # Math (12 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: nvidia/Llama-Nemotron-Post-Training-Dataset
       split: math
       columns: [input]
@@ -235,6 +237,8 @@ calibration_set:
       streaming: true
 
     # Sciences (16 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: nvidia/Llama-Nemotron-Post-Training-Dataset
       split: science
       columns: [input]
@@ -257,6 +261,8 @@ calibration_set:
       streaming: true
 
     # Medical (8 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: OpenMed/Medical-Reasoning-SFT-GPT-OSS-120B
       split: train
       columns: [messages]
@@ -275,6 +281,8 @@ calibration_set:
         prefix: "Summarize this:\n***\n"
 
     # Finance (8 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: gbharti/finance-alpaca
       split: train
       columns: [instruction, output]
@@ -290,6 +298,8 @@ calibration_set:
         prefix: "Summarize this:\n***\n"
 
     # Business (16 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: fka/awesome-chatgpt-prompts
       split: train
       columns: [prompt]
@@ -303,6 +313,8 @@ calibration_set:
       num_samples: 8
 
     # Humanities and Philosophy (8 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: ruggsea/stanford-encyclopedia-of-philosophy_instruct
       split: train
       columns: [question, answer]
@@ -324,6 +336,8 @@ calibration_set:
       streaming: true
 
     # Creative Writing, Adventure, Roleplay (13 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: Gryphe/Opus-WritingPrompts
       split: train
       columns: [conversations]
@@ -333,7 +347,7 @@ calibration_set:
     - dataset: anthracite-org/nopm_claude_writing_fixed
       split: train
       columns: [conversations]
-      formatter: sharegpt 
+      formatter: sharegpt
       num_samples: 2
 
     - dataset: zerofata/Roleplay-Anime-Characters
@@ -374,6 +388,8 @@ calibration_set:
       streaming: true
 
     # General Knowledge and Pop Culture (2 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: KaraKaraWitch/TvTroper-2025
       split: train
       columns: [article]
@@ -384,6 +400,8 @@ calibration_set:
         prefix: "Explain this trope like I'm your grandmother\n***\n"
 
     # Behavioral skills (8 samples)
+    # ---------------------------------------------------------------------------
+
     - dataset: AquaV/US-Army-Survival-Sharegpt
       split: train
       columns: [conversations]
@@ -409,6 +427,8 @@ calibration_set:
       num_samples: 1
 
     # Misc (1 sample)
+    # ---------------------------------------------------------------------------
+
     - dataset: PocketDoc/Dans-Kinomaxx-VanillaBackrooms
       split: train
       columns: [conversations]

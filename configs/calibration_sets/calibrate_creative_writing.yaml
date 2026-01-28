@@ -1,112 +1,436 @@
 calibration_set:
+  _templates:
+    programming_languages: &programming_languages "Solve the following problem using {{ ['Zephyr', 'Prolog', 'Cobol', 'Apex', 'Crystal', 'Fortran', 'Nim', 'Delphi', 'Ada', 'Objective-C', 'VBA', 'Perl', 'Groovy', 'MATLAB', 'Solidity', 'Visual Basic', 'OCaml', 'Erlang', 'Julia', 'Lisp', 'F#', 'Clojure', 'GDScript', 'Scala', 'R', 'Haskell', 'Ruby', 'Elixir', 'Lua', 'Zig', 'Dart', 'Swift', 'Metal', 'PowerShell', 'PHP', 'Kotlin', 'C', 'Java', 'C++', 'C#', 'Bash/Shell', 'Go', 'Rust', 'TypeScript', 'HTML/CSS', 'SQL', 'JavaScript', 'Python', 'Lean', 'Coq', 'Pony', 'D', 'Racket', 'Haxe', 'x86-64 ASM', 'ARM-64 ASM', 'LLVM IR', 'GLSL', 'CUDA', 'Vulkan'][hash(row|string) % 60] }}\n***\n"
+    spoken_languages: &spoken_languages "Answer in {{ ['Arabic', 'Chinese', 'French', 'German', 'Hebrew', 'Hindi', 'Japanese', 'Korean', 'Portuguese', 'Russian', 'Spanish', 'Turkish'][hash(row|string) % 12] }}\n***\n"
   max_seq_length: 8192
   shuffle: true
   seed: 42
   datasets:
-    - dataset: "neuralmagic/calibration"
-      subset: "LLM"
-      split: "train"
-      columns: ["messages"]
-      formatter: "chat_completion"
-      num_samples: 256
-    - dataset: "HuggingFaceH4/ultrachat_200k"
-      columns: ["messages"]
-      split: "train_sft"
-      formatter: "chat_completion"
-      num_samples: 256
-    - dataset: "nvidia/OpenCodeInstruct"
-      columns: ["input", "output"]
-      formatter: "prompt_answer"
-      split: "train"
+
+    # Category Summary (Total: 411 samples)
+    # =====================================================
+    # General chat (24 samples - 5.84%)
+    # Instruction and Reasoning tuning (14 samples - 3.41%)
+    # Multilingual (20 samples - 4.87%)
+    # Tool use (8 samples - 1.95%)
+    # Code / Programming / Software Engineering / Devops (16 samples - 3.89%)
+    # Math (12 samples - 2.92%)
+    # Sciences (16 samples - 3.89%)
+    # Medical (16 samples - 3.89%)
+    # Finance (8 samples - 1.95%)
+    # Business (20 samples - 4.87%)
+    # Humanities and Philosophy (32 samples - 7.79%)
+    # Creative Writing, Adventure, Roleplay (128 samples - 31.14%)
+    # General Knowledge and Pop Culture (64 samples - 15.57%)
+    # Behavioral skills (32 samples - 7.79%)
+    # Misc (1 sample - 0.24%)
+    # =====================================================
+
+    # Research
+    # =====================================================
+    # According to this presentation https://minjiazhang.github.io/courses/fall24-resource/slides/awq.pdf
+    # AWQ only needs 64 samples to identify salient weights that need to be preserved.
+    #
+    # This research predates the boom of MoE (Mixture-of-Experts) models
+    # and it's safer to assume that 64 samples of a general dataset
+    # cannot properly identify salient weights of experts.
+
+    # General chat (24 samples)
+    # ---------------------------------------------------------------------------
+    - dataset: HuggingFaceH4/ultrachat_200k
+      columns: [messages]
+      split: train_sft
+      formatter: chat_completion
+      num_samples: 8
+      streaming: true
+
+    - dataset: databricks/databricks-dolly-15k
+      split: train
+      columns: [instruction, response]
+      formatter: prompt_answer
+      num_samples: 8
+
+    - dataset: neuralmagic/calibration
+      subset: LLM
+      split: train
+      columns: [messages]
+      formatter: chat_completion
+      num_samples: 8
+
+    # Instruction and Reasoning tuning (14 samples)
+    # ---------------------------------------------------------------------------
+    - dataset: HuggingFaceH4/no_robots
+      split: train
+      columns: [messages]
+      formatter: chat_completion
+      num_samples: 2
+
+    - dataset: nvidia/HelpSteer
+      split: train
+      columns: [prompt, response]
+      formatter: prompt_answer
+      num_samples: 2
+      streaming: true
+
+    - dataset: garage-bAInd/Open-Platypus
+      split: train
+      columns: [instruction, output]
+      formatter: prompt_answer
+      num_samples: 2
+
+    - dataset: PJMixers/grimulkan_physical-reasoning-ShareGPT
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 4
+
+    - dataset: PJMixers/grimulkan_theory-of-mind-ShareGPT
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 4
+
+    # Multilingual (20 samples)
+    # ---------------------------------------------------------------------------
+    - dataset: HuggingFaceH4/Multilingual-Thinking
+      split: train
+      columns: [user]
+      formatter: raw_text
       num_samples: 16
-    - dataset: "CSJianYang/CodeArena"
-      columns: ["messages"]
-      formatter: "chat_completion"
-      split: "test"
-      num_samples: 32
-    - dataset: "nvidia/OpenScienceReasoning-2"
-      columns: ["input", "output"]
-      formatter: "prompt_answer"
-      split: "train"
+      formatter_params:
+        prefix: *spoken_languages
+
+    - dataset: ServiceNow-AI/M2Lingual
+      subset: full_data
+      split: train
+      columns: [conversation]
+      formatter: chat_completion
+      num_samples: 4
+      streaming: true
+
+    # Tool use (include commented out ToolAce) (8 samples)
+    # ---------------------------------------------------------------------------
+
+    # Fail with minimax!
+    # jinja2.exceptions.TemplateError: Message has tool role, but there was no previous assistant message with a tool call!
+    # - dataset: Team-ACE/ToolACE
+    #   split: train
+    #   columns: [system, conversations]
+    #   formatter: chat_completion_with_sysprompt
+    #   num_samples: 8
+
+    - dataset: interstellarninja/hermes_reasoning_tool_use
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 8
+      streaming: true
+
+    # Code / Programming / Software Engineering / Devops (16 samples)
+    # ---------------------------------------------------------------------------
+
+    # - dataset: deepmind/code_contests
+    #   split: train
+    #   columns: [name]
+    #   formatter: deepmind_code_contests
+    #   num_samples: 50
+    #   streaming: true
+
+    # - dataset: dh02391735/stackoverflow-kubernetes-questions
+    #   split: train
+    #   columns: [instruction]
+    #   formatter: raw_text
+    #   num_samples: 8
+    #   streaming: true
+
+    - dataset: diversoailab/humaneval-rust
+      split: train
+      columns: [prompt]
+      formatter: raw_text
+      num_samples: 4
+      formatter_params: # The dataset actually doesn't hardcode the language
+        prefix: *programming_languages
+
+    - dataset: ammarnasr/the-stack-rust-clean
+      split: train
+      columns: [content]
+      formatter: raw_text
+      num_samples: 4
+      streaming: true
+      formatter_params:
+        prefix: "Explain this code and comment it for a junior dev.\n***\n"
+
+    # - dataset: CSJianYang/CodeArena
+    #   split: test
+    #   columns: [messages]
+    #   formatter: chat_completion
+    #   num_samples: 8
+
+    # - dataset: nvidia/OpenCodeInstruct
+    #   split: train
+    #   columns: [input, output]
+    #   formatter: prompt_answer
+    #   num_samples: 8
+    #   streaming: true
+
+    # - dataset: nvidia/Llama-Nemotron-Post-Training-Dataset
+    #   split: code
+    #   columns: [input]
+    #   formatter: chat_completion
+    #   num_samples: 8
+    #   streaming: true
+
+    # - dataset: nvidia/Nemotron-Competitive-Programming-v1
+    #   split: competitive_coding_cpp_part00
+    #   columns: [messages]
+    #   formatter: chat_completion
+    #   num_samples: 8
+    #   streaming: true
+
+    # The conversations columns has another "conversations" field :/
+    # - dataset: sr5434/CodegebraGPT_data
+    #   subset: 100k-text
+    #   split: train
+    #   columns: [conversations]
+    #   formatter: sharegpt
+    #   num_samples: 8
+
+    # - dataset: rombodawg/code_bagel_hermes-2.5
+    #   split: train
+    #   columns: [input, output]
+    #   formatter: prompt_answer
+    #   num_samples: 8
+    #   streaming: true
+
+    - dataset: MathArena/project_euler
+      split: train
+      columns: [problem]
+      formatter: raw_text
+      num_samples: 8
+      formatter_params:
+        prefix: *programming_languages
+
+    # Math (12 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: nvidia/Llama-Nemotron-Post-Training-Dataset
+      split: math
+      columns: [input]
+      formatter: chat_completion
+      num_samples: 4
+      streaming: true
+
+    - dataset: nvidia/Nemotron-Math-Proofs-v1
+      split: lean
+      columns: [formal_statement]
+      formatter: raw_text
+      num_samples: 4
+      streaming: true
+      formatter_params:
+        prefix: "Can you improve, document and add comment to this Lean proof for a non-mathematician?\n***\n"
+
+    - dataset: nvidia/OpenMathInstruct-2
+      split: train
+      columns: [problem, generated_solution]
+      formatter: prompt_answer
+      num_samples: 4
+      streaming: true
+
+    # Sciences (16 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: nvidia/Llama-Nemotron-Post-Training-Dataset
+      split: science
+      columns: [input]
+      formatter: chat_completion
+      num_samples: 4
+      streaming: true
+
+    - dataset: nvidia/OpenScienceReasoning-2
+      split: train
+      columns: [input, output]
+      formatter: prompt_answer
+      num_samples: 8
+      streaming: true
+
+    - dataset: MegaScience/MegaScience
+      split: train
+      columns: [question, answer]
+      formatter: prompt_answer
+      num_samples: 4
+      streaming: true
+
+    # Medical (16 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: OpenMed/Medical-Reasoning-SFT-GPT-OSS-120B
+      split: train
+      columns: [messages]
+      formatter: chat_completion
+      num_samples: 8
+      streaming: true
+
+    - dataset: ccdv/pubmed-summarization
+      subset: section
+      split: train
+      columns: [article]
+      formatter: raw_text
+      num_samples: 8
+      streaming: true
+      formatter_params:
+        prefix: "Summarize this:\n***\n"
+
+    # Finance (8 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: gbharti/finance-alpaca
+      split: train
+      columns: [instruction, output]
+      formatter: prompt_answer
+      num_samples: 4
+
+    - dataset: vladlen32230/summarization-yahoo-stock-finance-article-text
+      split: train
+      columns: [text]
+      formatter: raw_text
+      num_samples: 4
+      formatter_params:
+        prefix: "Summarize this:\n***\n"
+
+    # Business (20 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: fka/awesome-chatgpt-prompts
+      split: train
+      columns: [prompt]
+      formatter: raw_text
+      num_samples: 4
+
+    - dataset: theoldmandthesea/17k_business_book
+      split: train
+      columns: [question, answer]
+      formatter: prompt_answer
       num_samples: 16
-    - dataset: "MegaScience/MegaScience"
-      columns: ["question", "answer"]
-      formatter: "prompt_answer"
-      split: "train"
+
+    # Humanities and Philosophy (32 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: ruggsea/stanford-encyclopedia-of-philosophy_instruct
+      split: train
+      columns: [question, answer]
+      formatter: prompt_answer
+      num_samples: 8
+      streaming: true
+
+    - dataset: mlfoundations-dev/stackexchange_philosophy
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 8
+
+    - dataset: FreedomIntelligence/SocraticChat
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
       num_samples: 16
-    - dataset: "Gryphe/Opus-WritingPrompts"
-      columns: ["conversations"]
-      formatter: "sharegpt"
-      split: "train"
-      num_samples: 32
-    - dataset: "ServiceNow-AI/M2Lingual"
-      subset: "full_data"
-      columns: ["conversation"]
-      formatter: "chat_completion"
-      split: "train"
-      num_samples: 256
-    - dataset: "anthracite-org/stheno-filtered-v1.1"
-      columns: ["conversations"]
-      formatter: "sharegpt"
-      split: "train"
-      num_samples: 32
-    - dataset: "zerofata/Roleplay-Anime-Characters"
-      columns: ["messages"]
-      formatter: "chat_completion"
-      split: "train"
+      streaming: true
+
+    # Creative Writing, Adventure, Roleplay (128 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: Gryphe/Opus-WritingPrompts
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
       num_samples: 16
-    - dataset: "zerofata/Instruct-Anime"
-      columns: ["messages"]
-      formatter: "chat_completion"
-      split: "train"
+
+    - dataset: anthracite-org/nopm_claude_writing_fixed
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
       num_samples: 16
-    - dataset: "zerofata/Instruct-Anime-CreativeWriting"
-      columns: ["messages"]
-      formatter: "chat_completion"
-      split: "train"
+
+    - dataset: zerofata/Roleplay-Anime-Characters
+      split: train
+      columns: [messages]
+      formatter: chat_completion
       num_samples: 16
-    - dataset: "sam-paech/gutenberg3-generalfiction-scifi-fantasy-romance-adventure-dpo"
-      columns: ["chosen"]
-      formatter: "chat_completion"
-      split: "train"
+
+    - dataset: zerofata/Instruct-Anime
+      split: train
+      columns: [messages]
+      formatter: chat_completion
       num_samples: 16
-    - dataset: "nvidia/OpenMathInstruct-2"
-      columns: ["problem", "generated_solution"]
-      formatter: "prompt_answer"
-      split: "train"
+
+    - dataset: zerofata/Instruct-Anime-CreativeWriting
+      split: train
+      columns: [messages]
+      formatter: chat_completion
       num_samples: 16
-    - dataset: "fka/awesome-chatgpt-prompts"
-      columns: ["prompt"]
-      formatter: "raw_text"
-      split: "train"
-      num_samples: 203
-    - dataset: "databricks/databricks-dolly-15k"
-      columns: ["instruction", "response"]
-      formatter: "prompt_answer"
-      split: "train"
-      num_samples: 256
-    - dataset: "FreedomIntelligence/SocraticChat"
-      columns: ["conversations"]
-      formatter: "chat_completion"
-      split: "train"
-      num_samples: 32
-    - dataset: "ruggsea/stanford-encyclopedia-of-philosophy_instruct"
-      columns: ["question", "answer"]
-      formatter: "prompt_answer"
-      split: "train"
-      num_samples: 32
-    - dataset: "mlfoundations-dev/stackexchange_philosophy"
-      columns: ["conversations"]
-      formatter: "chat_completion"
-      split: "train"
-      num_samples: 32
-    - dataset: "theoldmandthesea/17k_business_book"
-      columns: ["question", "answer"]
-      formatter: "prompt_answer"
-      split: "train"
+
+    - dataset: sam-paech/gutenberg3-generalfiction-scifi-fantasy-romance-adventure-dpo
+      split: train
+      columns: [chosen]
+      formatter: chat_completion
+      num_samples: 16
+
+    - dataset: PocketDoc/Dans-Prosemaxx-Adventure
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 16
+
+    - dataset: anthracite-org/stheno-filtered-v1.1
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 16
+      streaming: true
+
+    # General Knowledge and Pop Culture (64 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: KaraKaraWitch/TvTroper-2025
+      split: train
+      columns: [article]
+      formatter: raw_text
       num_samples: 64
-    - dataset: "anthracite-org/nopm_claude_writing_fixed"
-      columns: ["conversations"]
-      formatter: "chat_completion"
-      split: "train"
-      num_samples: 32
+      streaming: true
+      formatter_params:
+        prefix: "Explain this trope like I'm your grandmother\n***\n"
+
+    # Behavioral skills (32 samples)
+    # ---------------------------------------------------------------------------
+
+    - dataset: AquaV/US-Army-Survival-Sharegpt
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 8
+
+    - dataset: AquaV/Interrogation-Sharegpt
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 8
+
+    - dataset: AquaV/Multi-Environment-Operations-Sharegpt
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 8
+
+    - dataset: AquaV/Resistance-Sharegpt
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 8
+
+    # Misc (1 sample)
+    # ---------------------------------------------------------------------------
+
+    - dataset: PocketDoc/Dans-Kinomaxx-VanillaBackrooms
+      split: train
+      columns: [conversations]
+      formatter: sharegpt
+      num_samples: 1
