@@ -1,4 +1,4 @@
-# quantizers/configs/recipes/recipe_Dense_RTN_NVFP4.yaml
+# quantizers/configs/recipes/recipe_Dense_NVFP4.yaml
 #
 # NVFP4 round-to-nearest is competitive with more elaborate methods:
 # - https://arxiv.org/pdf/2509.23202 - Bridging the Gap Between Promise and Performance for Microscaling FP4 Quantization

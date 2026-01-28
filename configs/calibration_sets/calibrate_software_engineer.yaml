@@ -399,7 +399,7 @@ calibration_set:
       formatter_params:
         prefix: "Explain this trope like I'm your grandmother\n***\n"
 
-    # Behavioral skills (8 samples)
+    # Behavioral skills (4 samples)
     # ---------------------------------------------------------------------------
 
     - dataset: AquaV/US-Army-Survival-Sharegpt
