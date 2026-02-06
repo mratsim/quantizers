@@ -90,15 +90,12 @@ When quantizing MoE, quantizing activations is tricky as only a subset of expert
 
 When quantizing MoE, quantizing activations is tricky as only a subset of experts are activated per request. You have to make sure all experts are calibrated.
 
-<details>
-<summary>Visual showcase of why ensuring quantization of all MoE experts is important</summary>
+**Visual showcase of why ensuring quantization of all MoE experts is important**
 
 - Source: https://avtc.github.io/aquarium-side-by-side/
 - Context: https://github.com/ModelCloud/GPTQModel/pull/2235
 
 ![image](https://cdn-uploads.huggingface.co/production/uploads/67f26fd2c7b14380431d1f5a/BDc3-0m3_WLl3ZmbBMhmd.png)
-
-</details>
 
 ## References
 
