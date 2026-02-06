@@ -29,6 +29,22 @@ This is also reported in Intel and Nvidia repo:
 In LLM compressor this can be handled by making sure the `targets` of Quantization modifier is `Linear`.
 Note that for MoE, the Linear part of individual experts may be masked and they would be left unquantized.
 
+## Tensors to up-quantize
+
+If there is enough bits, down projections should be prioritized.
+
+According to [4]
+> Fig. 3: Maximum absolute value over layers for a LLaMA3-8B.
+> Each color represent a different projection and we clearly see that down_proj has the biggest
+> spikes in input and output. We also observe that RMSNorm propagate spikes through the entire model
+
+According to [5]
+> Figure 5(a) illustrates the extremal ratio across layers and modules in LLaMA2-7B, highlighting
+> that weight outliers are concentrated in the down-projection matrices Wdown
+> ℓ of the second layer and
+> the last two layers. Figures 5(b) and 5(c) provide detailed visualizations of these outliers in the last
+> two layers.
+
 ## Mixture-of-Experts quantization (MoE)
 
 Mixture-of-Experts require specific quantization techniques.
@@ -70,12 +86,26 @@ When quantizing MoE, quantizing activations is tricky as only a subset of expert
 - While NVFP4 requires few samples for calibration (20 in LLM compressor example)
   to ensure all experts see a large enough number of samples we need a large and varied dataset.
 
+### Expert quantization
+
+When quantizing MoE, quantizing activations is tricky as only a subset of experts are activated per request. You have to make sure all experts are calibrated.
+
+<details>
+<summary>Visual showcase of why ensuring quantization of all MoE experts is important</summary>
+
+- Source: https://avtc.github.io/aquarium-side-by-side/
+- Context: https://github.com/ModelCloud/GPTQModel/pull/2235
+
+![image](https://cdn-uploads.huggingface.co/production/uploads/67f26fd2c7b14380431d1f5a/BDc3-0m3_WLl3ZmbBMhmd.png)
+
+</details>
+
 ## References
 
 1. Why Do Some Inputs Break Low-Bit LLM Quantization? (2025)\
   Ting-Yun Chang, Muru Zhang, Jesse Thomason, Robin Jia\
   https://arxiv.org/pdf/2506.12044
-  
+
 2. Examining Post-Training Quantization for Mixture-of-Experts: A Benchmark (2024)\
   Pingzhi Li, Xiaolong Jin, Yu Cheng, Tianlong Chen\
   https://arxiv.org/pdf/2406.08155v1
@@ -83,3 +113,14 @@ When quantizing MoE, quantizing activations is tricky as only a subset of expert
 3. Mixture of Quantized Experts (MoQE): Complementary Effect of Low-bit Quantization and Robustness (2023)\
   Young Jin Kim, Raffy Fahim, Hany Hassan Awadalla\
   https://arxiv.org/pdf/2310.02410
+
+
+4. Precision Where It Matters: A Novel Spike\
+   Aware Mixed-Precision Quantization Strategy for\
+   LLaMA-based Language Models (2025)\
+   Lucas Maisonnave, Cyril Moineau, Olivier Bichler, and Fabrice Rastello\
+   https://arxiv.org/pdf/2504.21553
+
+5. Systematic Outliers in Large Language Models (2025)\
+   Yongqi An, Xu Zhao, Tao Yu, Ming Tang, Jinqiao Wang\
+   https://arxiv.org/pdf/2502.06415v2
