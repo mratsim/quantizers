@@ -253,32 +253,21 @@ def test_chat_completion_formatter_field_validation():
 
     # Test with nested structure that matches test_data format
     nested_data = {
-        "messages_col": {
-            "messages": [
-                {"role": "user", "content": "Hello"},
-                {"role": "assistant", "content": "Hi there"},
-            ]
-        }
+        "messages_col": [
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi there"},
+        ]
     }
     # This simulates how the formatter is called with the full row
     nested_result = DatasetFmt.chat_completion(["messages_col"], nested_data)
 
-    # Verify we get the nested dictionary correctly, not just the inner messages list
-    # The implementation returns the value from the specified column, which could be a dictionary
-    expected = nested_data["messages_col"]
-    # For debug purposes if assertion fails
-    print(f"DEBUG: nested result = {nested_result}")
-    print(f"DEBUG: expected = {expected}")
-    assert nested_result == expected
-    print("✅ Chat completion correctly extracts from nested dictionary structure")
-
-    # Now verify we can access the messages from the result
-    messages = nested_result["messages"]
-    assert len(messages) == 2
-    assert messages[0]["role"] == "user"
-    assert messages[0]["content"] == "Hello"
-    # The nested_result is a dictionary containing the messages, not the messages list itself
-    # We've already verified the messages content above
+    # Verify we get the messages list correctly
+    assert len(nested_result) == 2
+    assert nested_result[0]["role"] == "user"
+    assert nested_result[0]["content"] == "Hello"
+    assert nested_result[1]["role"] == "assistant"
+    assert nested_result[1]["content"] == "Hi there"
+    print("✅ Chat completion correctly extracts from nested list structure")
 
     print("✅ Chat completion formatter correctly handles different data formats")
 
